@@ -1,0 +1,22 @@
+llm_ignore/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+.venv/
+venv/
+.env
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Generated test fixtures (re-created by tests/seed_fixtures.py)
+tests/fixtures/data/

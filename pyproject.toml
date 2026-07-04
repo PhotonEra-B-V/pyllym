@@ -1,0 +1,77 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyllm"
+version = "1.16.0"
+description = "One delightful, async-first Python framework for every major AI provider."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.13"
+authors = [{ name = "pyllm contributors" }]
+keywords = [
+    "llm", "ai", "openai", "anthropic", "gemini", "bedrock", "mistral",
+    "ollama", "chatbot", "agents", "embeddings", "rag", "async",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+dependencies = [
+    "httpx>=0.27",
+    "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+db = ["sqlalchemy>=2.0"]
+mime = ["puremagic>=1.28"]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "respx>=0.21",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[project.urls]
+Homepage = "https://github.com/PhotonEra-B-V/malayopython_reticulatus_llm"
+Source = "https://github.com/PhotonEra-B-V/malayopython_reticulatus_llm"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyllm"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/pyllm/models.json" = "pyllm/models.json"
+"src/pyllm/aliases.json" = "pyllm/aliases.json"
+"src/pyllm/models_schema.json" = "pyllm/models_schema.json"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4", "PIE", "RUF"]
+ignore = ["B008", "RUF012", "SIM108", "SIM105", "RUF005", "UP047"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
+
+[tool.mypy]
+python_version = "3.13"
+packages = ["pyllm"]
+mypy_path = "src"
+strict = false
+warn_unused_ignores = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

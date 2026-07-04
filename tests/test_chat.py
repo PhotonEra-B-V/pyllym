@@ -1,0 +1,209 @@
+from __future__ import annotations
+
+import json
+
+import httpx
+import pytest
+import respx
+
+import pyllm
+from pyllm import Tool
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_openai_chat():
+    respx.post("https://api.openai.com/v1/chat/completions").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "id": "x",
+                "model": "gpt-4o",
+                "choices": [
+                    {"message": {"role": "assistant", "content": "Hi!"}, "finish_reason": "stop"}
+                ],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
+            },
+        )
+    )
+    chat = pyllm.create_chat(model="gpt-4o")
+    msg = await chat.ask("Hello")
+    assert msg.content == "Hi!"
+    assert msg.input_tokens == 10
+    assert msg.output_tokens == 5
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_anthropic_chat():
+    respx.post("https://api.anthropic.com/v1/messages").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "id": "msg",
+                "model": "claude-sonnet-4-6",
+                "stop_reason": "end_turn",
+                "content": [{"type": "text", "text": "Hello from Claude"}],
+                "usage": {"input_tokens": 12, "output_tokens": 7},
+            },
+        )
+    )
+    chat = pyllm.create_chat(model="claude-sonnet-4-6")
+    msg = await chat.ask("Hello")
+    assert msg.content == "Hello from Claude"
+    assert msg.output_tokens == 7
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_tool_loop():
+    class WeatherTool(Tool):
+        description = "Get weather"
+
+        def execute(self, *, city: str):
+            return f"Sunny in {city}"
+
+    state = {"n": 0}
+
+    def responder(request):
+        state["n"] += 1
+        if state["n"] == 1:
+            return httpx.Response(
+                200,
+                json={
+                    "model": "gpt-4o",
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": None,
+                                "tool_calls": [
+                                    {
+                                        "id": "c1",
+                                        "type": "function",
+                                        "function": {
+                                            "name": "weather",
+                                            "arguments": json.dumps({"city": "Paris"}),
+                                        },
+                                    }
+                                ],
+                            },
+                            "finish_reason": "tool_calls",
+                        }
+                    ],
+                    "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+                },
+            )
+        return httpx.Response(
+            200,
+            json={
+                "model": "gpt-4o",
+                "choices": [
+                    {
+                        "message": {"role": "assistant", "content": "It is sunny in Paris."},
+                        "finish_reason": "stop",
+                    }
+                ],
+                "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+            },
+        )
+
+    respx.post("https://api.openai.com/v1/chat/completions").mock(side_effect=responder)
+    chat = pyllm.create_chat(model="gpt-4o").with_tool(WeatherTool)
+    msg = await chat.ask("Weather in Paris?")
+    assert msg.content == "It is sunny in Paris."
+    assert [m.role for m in chat.messages] == ["user", "assistant", "tool", "assistant"]
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_streaming():
+    sse = (
+        b'data: {"model":"gpt-4o","choices":[{"delta":{"content":"Hel"}}]}\n\n'
+        b'data: {"model":"gpt-4o","choices":[{"delta":{"content":"lo!"}}]}\n\n'
+        b'data: {"model":"gpt-4o","choices":[{"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":1,"completion_tokens":2}}\n\n'
+        b"data: [DONE]\n\n"
+    )
+    respx.post("https://api.openai.com/v1/chat/completions").mock(
+        return_value=httpx.Response(200, content=sse, headers={"content-type": "text/event-stream"})
+    )
+    chat = pyllm.create_chat(model="gpt-4o")
+    chunks = [c.content async for c in chat.stream("Hi")]
+    assert "".join(c for c in chunks if c) == "Hello!"
+    assert chat.messages[-1].content == "Hello!"
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_gemini_chat():
+    respx.post(
+        url__regex=r"https://generativelanguage\.googleapis\.com/v1beta/models/.*:generateContent"
+    ).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "modelVersion": "gemini-2.5-flash",
+                "candidates": [
+                    {
+                        "content": {"role": "model", "parts": [{"text": "Hi from Gemini"}]},
+                        "finishReason": "STOP",
+                    }
+                ],
+                "usageMetadata": {"promptTokenCount": 8, "candidatesTokenCount": 4},
+            },
+        )
+    )
+    chat = pyllm.create_chat(model="gemini-2.5-flash")
+    msg = await chat.ask("Hello")
+    assert msg.content == "Hi from Gemini"
+    assert msg.input_tokens == 8
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_anthropic_tool_loop():
+    class WeatherTool(Tool):
+        description = "Get weather"
+
+        def execute(self, *, city: str):
+            return f"Sunny in {city}"
+
+    state = {"n": 0}
+
+    def responder(request):
+        state["n"] += 1
+        if state["n"] == 1:
+            return httpx.Response(
+                200,
+                json={
+                    "id": "m1",
+                    "model": "claude-sonnet-4-6",
+                    "stop_reason": "tool_use",
+                    "content": [
+                        {"type": "text", "text": "checking"},
+                        {
+                            "type": "tool_use",
+                            "id": "tu1",
+                            "name": "weather",
+                            "input": {"city": "Paris"},
+                        },
+                    ],
+                    "usage": {"input_tokens": 1, "output_tokens": 1},
+                },
+            )
+        return httpx.Response(
+            200,
+            json={
+                "id": "m2",
+                "model": "claude-sonnet-4-6",
+                "stop_reason": "end_turn",
+                "content": [{"type": "text", "text": "It is sunny in Paris."}],
+                "usage": {"input_tokens": 1, "output_tokens": 1},
+            },
+        )
+
+    respx.post("https://api.anthropic.com/v1/messages").mock(side_effect=responder)
+    chat = pyllm.create_chat(model="claude-sonnet-4-6").with_tool(WeatherTool)
+    msg = await chat.ask("Weather in Paris?")
+    assert msg.content == "It is sunny in Paris."
+    assert [m.role for m in chat.messages] == ["user", "assistant", "tool", "assistant"]
