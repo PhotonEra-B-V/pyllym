@@ -84,8 +84,7 @@ llm_ignore/                 # read-only reference source, if present (git-ignore
   scenarios/messages/ids or unknown claimed ids. This is the watertight
   guarantee. CLI: `python -m pyllm.bdd specs/ --out tests/generated`.
   Generated tests carry the `bdd_pending` marker and are treated as the
-  read-only specification during implementation. (Gherkin `.feature` input has
-  been retired; `sequence.py` stays permanently.)
+  read-only specification during implementation.
 - **Security model.** A spec's `given`/`when`/`then` and fixture bodies are
   rendered verbatim into a pytest module that then gets run — every such string
   is executable Python (true in plan mode too, so a hostile `.toml` from a PR is

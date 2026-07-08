@@ -515,9 +515,7 @@ def test_scan_plan_flags_fixture_body():
 
 def test_scan_plan_allows_canonical_error_path():
     """The multi-line ``with pytest.raises(...):`` given form parses cleanly."""
-    plan_ = _plan_with(
-        given=["with pytest.raises(ValueError):", "    f(-1)"], when="None", then=[]
-    )
+    plan_ = _plan_with(given=["with pytest.raises(ValueError):", "    f(-1)"], when="None", then=[])
     assert scan_plan(plan_) == []
 
 
