@@ -25,17 +25,18 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "httpx>=0.27",
+    "aiohttp>=3.14",
     "pydantic>=2.7",
 ]
 
 [project.optional-dependencies]
 db = ["sqlalchemy>=2.0"]
+celery = ["celery>=5.4"]
 mime = ["puremagic>=1.28"]
 dev = [
     "pytest>=8",
     "pytest-asyncio>=0.24",
-    "respx>=0.21",
+    "aioresponses>=0.7.8",
     "ruff>=0.6",
     "mypy>=1.11",
 ]

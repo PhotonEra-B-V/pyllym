@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import httpx
 import pytest
-import respx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
@@ -18,22 +16,19 @@ Chat, Message, ToolCall = create_models(Base)
 
 
 @pytest.mark.asyncio
-@respx.mock
-async def test_chat_persistence_roundtrip():
-    respx.post("https://api.openai.com/v1/chat/completions").mock(
-        return_value=httpx.Response(
-            200,
-            json={
-                "model": "gpt-4o",
-                "choices": [
-                    {
-                        "message": {"role": "assistant", "content": "Persisted reply"},
-                        "finish_reason": "stop",
-                    }
-                ],
-                "usage": {"prompt_tokens": 3, "completion_tokens": 4},
-            },
-        )
+async def test_chat_persistence_roundtrip(mock_http):
+    mock_http.post(
+        "https://api.openai.com/v1/chat/completions",
+        payload={
+            "model": "gpt-4o",
+            "choices": [
+                {
+                    "message": {"role": "assistant", "content": "Persisted reply"},
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {"prompt_tokens": 3, "completion_tokens": 4},
+        },
     )
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     async with engine.begin() as conn:

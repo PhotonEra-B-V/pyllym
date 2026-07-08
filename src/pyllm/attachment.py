@@ -187,11 +187,10 @@ class Attachment:
         return None
 
     def _fetch_content(self) -> bytes:
-        import httpx
+        from urllib.request import urlopen
 
-        resp = httpx.get(str(self.source), follow_redirects=True, timeout=30)
-        resp.raise_for_status()
-        return resp.content
+        with urlopen(str(self.source), timeout=30) as resp:
+            return resp.read()
 
     def _determine_mime_type(self) -> str:
         if self.is_provider_file():

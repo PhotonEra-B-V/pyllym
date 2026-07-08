@@ -1,6 +1,6 @@
 """Streaming support.
 
-An async SSE parser over the httpx byte stream. Concrete protocols mix in
+An async SSE parser over the aiohttp byte stream. Concrete protocols mix in
 :class:`StreamingMixin` and implement ``stream_url`` and ``build_chunk``.
 """
 

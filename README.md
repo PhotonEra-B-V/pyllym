@@ -34,14 +34,16 @@ print(message.content)
 - 🔢 **Embeddings**, 🎨 **image generation**, 🗣️ **speech**, 📝 **transcription**, 🛡️ **moderation**
 - 📚 **Citations** normalized across providers
 - 🗄️ **Optional SQLAlchemy persistence** (async) for chats, messages, and tool calls
+- ⚙️ **Optional Celery integration** — run chat, embeddings & more as background tasks
 - 📇 A bundled **model registry** (`models.json`) with pricing & capabilities
-- 🐍 Modern, fully type-annotated **Python 3.13+**, async-first on `httpx`
+- 🐍 Modern, fully type-annotated **Python 3.13+**, async-first on `aiohttp`
 
 ## Installation
 
 ```bash
 pip install pyllm                # core
 pip install "pyllm[db]"          # + SQLAlchemy persistence
+pip install "pyllm[celery]"      # + Celery background tasks
 pip install "pyllm[mime]"        # + content-based MIME sniffing
 pip install "pyllm[dev]"         # + test/lint tooling
 ```
@@ -60,6 +62,13 @@ pyllm.configure(lambda c: (
     setattr(c, "gemini_api_key", "..."),
 ))
 ```
+
+Any provider option that isn't set in code falls back to the environment
+variable of the same name in uppercase — `OPENAI_API_KEY`,
+`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OLLAMA_API_BASE`, and so on. Values
+set via `pyllm.configure` always take precedence, so exporting keys in your
+shell is enough to get started (including for CLI entry points like
+`python -m pyllm.bdd`).
 
 Per-call overrides use a `Context`:
 
@@ -198,6 +207,143 @@ await chat.ask("Hello!")             # user + assistant rows are persisted
 await session.commit()
 ```
 
+## Background tasks (Celery)
+
+Optionally run pyllm operations on Celery workers. `create_tasks` registers
+ready-made tasks (`ask`, `embed`, `paint`, `speak`, `transcribe`, `moderate`)
+on your app — broker-friendly JSON in, plain dicts out:
+
+```python
+from celery import Celery
+from pyllm.celery import create_tasks
+
+app = Celery("worker", broker="redis://localhost:6379/0",
+             backend="redis://localhost:6379/1")
+tasks = create_tasks(app)                 # or create_tasks(app, queue="llm")
+
+result = tasks.ask.delay("What's the capital of France?", model="gpt-5.4")
+result.get()                              # -> the assistant Message as a dict
+
+tasks.embed.delay("Hello world")
+tasks.paint.delay("a red panda coding", save_path="/tmp/panda.png")
+```
+
+Workers are synchronous; each task drives the underlying coroutine with
+`pyllm.celery.run_async`, which also closes pyllm's HTTP pools before the
+event loop shuts down. Use `run_async` directly in your own tasks for
+richer features (tools, agents, callbacks) that don't serialize through a
+broker:
+
+```python
+@app.task
+def research(question: str) -> dict:
+    chat = pyllm.create_chat(model="gpt-5.4").with_tool(Weather)
+    return run_async(chat.ask(question)).to_dict()
+```
+
+## BDD test builder (pre-TDD scaffolding)
+
+`pyllm.bdd` turns a **TOML spec** into a *red* pytest suite plus an
+implementation brief — a building instruction for a coding agent (or a human)
+to implement against. pyllm dogfoods itself: in request mode the planning step
+is a structured-output call filling a `TestPlan` schema, and the actual test
+code is *always* rendered from deterministic templates, never written freeform
+by the model.
+
+```python
+from pyllm.bdd import build
+
+results = await build("specs/", "tests/generated", model="gpt-5.4")
+```
+
+On Mac it might make sense to have an alias for Python `alias python="python3"`.
+
+or from the shell:
+
+```bash
+python -m pyllm.bdd specs/retry.toml --out tests/generated --model gpt-5.4
+```
+
+For each spec this writes `test_<slug>.py` (the failing suite),
+`<slug>.plan.json` (the reviewable plan, including the API surface committed
+to), and `BRIEF_<slug>.md` (target signatures, test manifest, and the
+definition of done: the suite passes with zero edits to the tests).
+
+### Two modes
+
+A spec declares its API surface, coverable `[[rules]]` / `[[edge_cases]]`, and
+optionally hand-written `[[cases]]`. Mode is auto-detected from the presence of
+`[[cases]]` (override with `[meta].mode` or `--toml-mode`):
+
+- **plan mode** — the spec carries `[[cases]]`; the `TestPlan` is built
+  deterministically with **no LLM in the loop**.
+- **request mode** — a loose spec (rules/edge cases, no cases); the planner
+  model fills the `TestPlan`, told to cover every id.
+
+```toml
+[meta]
+feature_name = "Retry policy"
+
+[api]
+module = "myapp.retry"
+imports = ["from myapp.retry import backoff"]
+signatures = ["def backoff(attempt: int, *, base: float = 0.5) -> float"]
+
+[[rules]]
+id = "rule_1"
+text = "The first retry uses the base delay."
+
+[[cases]]
+test_name = "test_first_retry_uses_base_delay"
+scenario = "First retry uses the base delay"
+when = "backoff(1, base=0.5)"
+then = ["result == 0.5"]
+covers = ["rule_1"]
+```
+
+### Sequence diagrams (collaboration contracts)
+
+A spec can absorb Mermaid **sequence diagrams** via `[[sequences]]` tables as
+binding collaboration contracts:
+
+```toml
+[[sequences]]
+mermaid = """
+sequenceDiagram
+    Client->>+Server: GET /users
+    Server->>+Database: Query Users
+    Database-->>-Server: Return Data
+    Server-->>-Client: 200 OK
+"""
+```
+
+Every diagram message gets a stable id (`M1`, `M2`, ...) that a test case must
+claim via `covers`. Coverage is then verified **mechanically**, not by the
+model: a plan that drops a scenario, ignores a diagram message, or claims a
+nonexistent id fails the build (`strict=False` downgrades this to warnings in
+the brief). The brief renders the diagram plus a message-to-tests traceability
+table.
+
+### Safety
+
+A case's `given` / `when` / `then` and fixture bodies are rendered verbatim
+into a pytest module that then gets run — every such string is executable
+Python (true in plan mode too). Before rendering, an AST safety gate screens
+every executable string (both modes, unconditionally) and fails the build on
+imports, dangerous builtins/names (`os`, `subprocess`, `eval`, `__import__`,
+`open`, ...), dunder reflection, or non-Python — nothing runnable is written.
+
+> **This gate is defense-in-depth, not a sandbox.** A determined attacker can
+> evade any static denylist. Never run a freshly generated suite where secrets
+> or network are reachable before a human reviews the diff; sandbox generation
+> and execution of untrusted specs; and treat specs from untrusted contributors
+> as needing review *before* generation (the spec text reaches the planner
+> prompt) and *before* execution.
+
+Review the plan and tests **before** starting implementation — from that
+point on the suite is the specification, and generated tests are read-only.
+No extra dependencies are required.
+
 ## Supported providers
 
 | Provider | Status |
@@ -219,8 +365,8 @@ await session.commit()
 - **Async/await everywhere** for I/O. `await chat.ask(...)` and
   `async for chunk in chat.stream(...)`.
 - **Provider → Protocol → Connection** architecture: a provider knows *where*
-  and *who*; a protocol knows the wire format; the connection is `httpx`.
-- **`httpx`** for HTTP, with connection pools shared across chats per event
+  and *who*; a protocol knows the wire format; the connection is `aiohttp`.
+- **`aiohttp`** for HTTP, with connection pools shared across chats per event
   loop; call `await pyllm.aclose()` once at application shutdown.
 - **SQLAlchemy** for optional persistence.
 - Fully type-annotated, `ruff`/`mypy`-friendly, Python 3.13+.
@@ -235,6 +381,13 @@ ruff check src tests && ruff format --check src tests
 pytest
 ```
 
+## Something is missing
+
+If you feel like the library is missing something like a new LLM or existing one, that you think shold be there then can you open and issue for that, and I'll see what I can do about that.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+Inspired by RubyLLM, it is not a direct port and diverges on quite a few ways. If you are using Ruby then checkout out, it is great.
+https://rubyllm.com

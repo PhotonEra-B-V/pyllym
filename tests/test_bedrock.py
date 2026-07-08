@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import httpx
+import re
+
 import pytest
-import respx
 
 import pyllm
 
 from . import factories as f
+from .conftest import sent_requests
 
 
 def _bedrock_model_id() -> str:
@@ -16,19 +17,20 @@ def _bedrock_model_id() -> str:
 
 
 @pytest.mark.asyncio
-@respx.mock
-async def test_bedrock_converse_roundtrip():
-    route = respx.post(
-        url__regex=r"https://bedrock-runtime\..*\.amazonaws\.com/model/.*/converse$"
-    ).mock(return_value=httpx.Response(200, json=f.bedrock_converse("Bedrock says hi")))
+async def test_bedrock_converse_roundtrip(mock_http):
+    mock_http.post(
+        re.compile(r"https://bedrock-runtime\..*\.amazonaws\.com/model/.*/converse$"),
+        payload=f.bedrock_converse("Bedrock says hi"),
+    )
     chat = pyllm.create_chat(model=_bedrock_model_id(), provider="bedrock")
     msg = await chat.ask("hi")
-    assert route.called
+    requests = sent_requests(mock_http)
+    assert requests
     assert msg.content == "Bedrock says hi"
     assert msg.input_tokens == 9
     assert msg.output_tokens == 7
     # request was SigV4-signed
-    auth = route.calls.last.request.headers.get("Authorization", "")
+    auth = (requests[-1].kwargs.get("headers") or {}).get("Authorization", "")
     assert auth.startswith("AWS4-HMAC-SHA256")
 
 

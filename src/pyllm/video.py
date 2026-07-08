@@ -42,11 +42,10 @@ class Video:
         """Fetch the video bytes (blocking; use :meth:`ato_blob` inside async code)."""
         if self.is_base64():
             return base64.b64decode(self.data or "")
-        import httpx
+        from urllib.request import urlopen
 
-        resp = httpx.get(self.url, follow_redirects=True, timeout=300)  # type: ignore[arg-type]
-        resp.raise_for_status()
-        return resp.content
+        with urlopen(self.url, timeout=300) as resp:  # type: ignore[arg-type]
+            return resp.read()
 
     async def ato_blob(self) -> bytes:
         """Async variant of :meth:`to_blob` — does not block the event loop."""
@@ -54,10 +53,9 @@ class Video:
             return base64.b64decode(self.data or "")
         from .connection import Connection
 
-        async with Connection.basic() as client:
-            resp = await client.get(self.url, timeout=300)  # type: ignore[arg-type]
+        async with Connection.basic() as client, client.get(self.url) as resp:  # type: ignore[arg-type]
             resp.raise_for_status()
-            return resp.content
+            return await resp.read()
 
     def save(self, path: str | Path) -> str | Path:
         Path(path).expanduser().write_bytes(self.to_blob())

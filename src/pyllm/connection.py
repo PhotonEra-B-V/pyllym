@@ -1,4 +1,4 @@
-"""Async HTTP connection over httpx: client config plus an error-raising
+"""Async HTTP connection over aiohttp: session config plus an error-raising
 response hook and a small retry loop.
 """
 
@@ -13,7 +13,7 @@ from collections.abc import AsyncIterator, Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-import httpx
+import aiohttp
 
 from .errors import (
     OverloadedError,
@@ -31,7 +31,7 @@ logger = logging.getLogger("pyllm")
 
 # Exceptions/statuses worth retrying (mirrors Connection#retry_exceptions).
 _RETRY_STATUSES = {429, 500, 502, 503, 529}
-_RETRY_EXC = (httpx.TimeoutException, httpx.ConnectError, httpx.RemoteProtocolError)
+_RETRY_EXC = (TimeoutError, aiohttp.ClientConnectionError, aiohttp.ClientPayloadError)
 _RETRY_ERRORS = (RateLimitError, ServerError, ServiceUnavailableError, OverloadedError)
 
 
@@ -48,90 +48,101 @@ class Response:
 _TEXTUAL_TYPES = ("application/json", "text/", "application/xml", "+json")
 
 
-def _parse_body(resp: httpx.Response) -> Any:
-    # Check the content-type before touching resp.text so binary payloads
-    # (audio, images) are not needlessly decoded to a throwaway str.
-    ctype = resp.headers.get("content-type", "")
-    if not any(marker in ctype for marker in _TEXTUAL_TYPES) and resp.content[:1] not in (
+def _parse_body(ctype: str, content: bytes) -> Any:
+    # Check the content-type before decoding so binary payloads (audio,
+    # images) are not needlessly decoded to a throwaway str.
+    if not any(marker in ctype for marker in _TEXTUAL_TYPES) and content[:1] not in (
         b"{",
         b"[",
     ):
-        return resp.content
-    text = resp.text
+        return content
+    text = content.decode("utf-8", errors="replace")
     if "application/json" in ctype or (text[:1] in "{["):
         try:
-            return resp.json()
+            return _json.loads(text)
         except Exception:
             return text
     return text
 
 
-# Shared AsyncClients, keyed per event loop then per (base_url, timeout, proxy).
-# Sharing preserves connection pooling/keep-alive across Chat instances instead
-# of building (and leaking) a fresh client per facade call; keying by loop
+def _merge_url(base: str, url: str) -> str:
+    """Join a provider api_base with a (possibly relative) endpoint URL."""
+    if "://" in url:
+        return url
+    return base.rstrip("/") + "/" + url.lstrip("/")
+
+
+def _client_timeout(timeout: Any) -> aiohttp.ClientTimeout:
+    # Per-operation deadlines rather than a total-duration cap, so long
+    # streams are not cut off mid-response.
+    return aiohttp.ClientTimeout(
+        total=None, connect=timeout, sock_connect=timeout, sock_read=timeout
+    )
+
+
+# Shared ClientSessions, keyed per event loop then per timeout. Sharing
+# preserves connection pooling/keep-alive across Chat instances instead of
+# building (and leaking) a fresh session per facade call; keying by loop
 # avoids reusing connections across event loops.
-_CLIENT_CACHE: weakref.WeakKeyDictionary[Any, dict[tuple[Any, ...], httpx.AsyncClient]] = (
+_CLIENT_CACHE: weakref.WeakKeyDictionary[Any, dict[tuple[Any, ...], aiohttp.ClientSession]] = (
     weakref.WeakKeyDictionary()
 )
 
 
-def _shared_client(base_url: str, timeout: Any, proxy: Any) -> httpx.AsyncClient:
+def _shared_client(timeout: Any) -> aiohttp.ClientSession:
     loop = asyncio.get_running_loop()
     per_loop = _CLIENT_CACHE.setdefault(loop, {})
-    key = (str(base_url), timeout, proxy)
+    key = (timeout,)
     client = per_loop.get(key)
-    if client is None or client.is_closed:
-        client = httpx.AsyncClient(
-            base_url=base_url,
-            timeout=httpx.Timeout(timeout),
-            proxy=proxy,
-            follow_redirects=True,
-        )
+    if client is None or client.closed:
+        client = aiohttp.ClientSession(timeout=_client_timeout(timeout))
         per_loop[key] = client
     return client
 
 
 async def aclose() -> None:
-    """Close every shared HTTP client owned by the current event loop.
+    """Close every shared HTTP session owned by the current event loop.
 
     Call once at application shutdown (exported as ``pyllm.aclose``).
     """
     loop = asyncio.get_running_loop()
     per_loop = _CLIENT_CACHE.pop(loop, {})
     for client in per_loop.values():
-        if not client.is_closed:
-            await client.aclose()
+        if not client.closed:
+            await client.close()
 
 
 class Connection:
-    """Routes one provider's requests through a shared per-loop AsyncClient."""
+    """Routes one provider's requests through a shared per-loop ClientSession."""
 
     def __init__(self, provider: Provider, config: Configuration) -> None:
         self.provider = provider
         self.config = config
 
     @property
-    def _client(self) -> httpx.AsyncClient:
-        # Resolved lazily inside the running loop; api_base is read fresh so
-        # providers with dynamic bases (e.g. region changes) stay correct.
-        return _shared_client(
-            self.provider.api_base, self.config.request_timeout, self.config.http_proxy
-        )
+    def _client(self) -> aiohttp.ClientSession:
+        # Resolved lazily inside the running loop.
+        return _shared_client(self.config.request_timeout)
+
+    def _url(self, url: str) -> str:
+        # api_base is read fresh so providers with dynamic bases (e.g.
+        # region changes) stay correct.
+        return _merge_url(self.provider.api_base, url)
 
     @classmethod
-    def basic(cls) -> httpx.AsyncClient:
-        """A bare client for ad-hoc requests (models.dev, URL attachments)."""
-        return httpx.AsyncClient(follow_redirects=True, timeout=30)
+    def basic(cls) -> aiohttp.ClientSession:
+        """A bare session for ad-hoc requests (models.dev, URL attachments)."""
+        return aiohttp.ClientSession(timeout=_client_timeout(30))
 
     async def aclose(self) -> None:
-        """Close the shared client this connection routes through.
+        """Close the shared session this connection routes through.
 
-        Note the client may be shared with other connections on the same
-        base URL; prefer the module-level :func:`aclose` at shutdown.
+        Note the session may be shared with other connections; prefer the
+        module-level :func:`aclose` at shutdown.
         """
         client = self._client
-        if not client.is_closed:
-            await client.aclose()
+        if not client.closed:
+            await client.close()
 
     async def post(
         self,
@@ -148,6 +159,27 @@ class Connection:
     async def get(self, url: str, *, headers: Mapping[str, str] | None = None) -> Response:
         return await self._request("GET", url, headers=headers)
 
+    def _request_kwargs(
+        self,
+        payload: Any,
+        headers: Mapping[str, str] | None,
+        multipart: bool,
+    ) -> dict[str, Any]:
+        kwargs: dict[str, Any] = {"headers": {**self.provider.headers, **(headers or {})}}
+        if self.config.http_proxy:
+            kwargs["proxy"] = self.config.http_proxy
+        if payload is not None:
+            if multipart:
+                form = aiohttp.FormData()
+                for name, value in (payload.get("data") or {}).items():
+                    form.add_field(name, str(value))
+                for name, (filename, blob) in (payload.get("files") or {}).items():
+                    form.add_field(name, blob, filename=filename)
+                kwargs["data"] = form
+            else:
+                kwargs["json"] = payload
+        return kwargs
+
     async def _request(
         self,
         method: str,
@@ -157,26 +189,20 @@ class Connection:
         headers: Mapping[str, str] | None = None,
         multipart: bool = False,
     ) -> Response:
-        request_headers = {**self.provider.headers, **(headers or {})}
-        kwargs: dict[str, Any] = {"headers": request_headers}
-        if payload is not None:
-            if multipart:
-                kwargs["data"] = payload.get("data")
-                kwargs["files"] = payload.get("files")
-            else:
-                kwargs["json"] = payload
-
         last_exc: Exception | None = None
         for attempt in range(self.config.max_retries + 1):
+            # Multipart bodies are single-use; rebuild the kwargs per attempt.
+            kwargs = self._request_kwargs(payload, headers, multipart)
             try:
-                resp = await self._client.request(method, url, **kwargs)
-                wrapped = Response(
-                    status=resp.status_code,
-                    body=_parse_body(resp),
-                    headers=resp.headers,
-                    content=resp.content,
-                )
-                if resp.status_code >= 400:
+                async with self._client.request(method, self._url(url), **kwargs) as resp:
+                    content = await resp.read()
+                    wrapped = Response(
+                        status=resp.status,
+                        body=_parse_body(resp.headers.get("content-type", ""), content),
+                        headers=dict(resp.headers),
+                        content=content,
+                    )
+                if resp.status >= 400:
                     self._raise_for_response(wrapped)
                 return wrapped
             except _RETRY_EXC as exc:
@@ -201,15 +227,15 @@ class Connection:
 
         Errors (non-200) are raised after reading the error body.
         """
-        request_headers = {**self.provider.headers, **(headers or {})}
-        async with self._client.stream("POST", url, json=payload, headers=request_headers) as resp:
-            if resp.status_code >= 400:
-                await resp.aread()
-                body = _parse_body(resp)
+        kwargs = self._request_kwargs(payload, headers, multipart=False)
+        async with self._client.post(self._url(url), **kwargs) as resp:
+            if resp.status >= 400:
+                content = await resp.read()
+                body = _parse_body(resp.headers.get("content-type", ""), content)
                 self._raise_for_response(
-                    Response(status=resp.status_code, body=body, headers=resp.headers)
+                    Response(status=resp.status, body=body, headers=dict(resp.headers))
                 )
-            async for chunk in resp.aiter_bytes():
+            async for chunk in resp.content.iter_any():
                 yield chunk
 
     def _raise_for_response(self, response: Response) -> None:
