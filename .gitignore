@@ -25,3 +25,6 @@ tests/fixtures/data/
 tests/generated/
 *.plan.json
 BRIEF_*.md
+
+# Workflow isolated worktrees (scratch; auto-created by Agent isolation)
+.claude/worktrees/

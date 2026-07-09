@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import ClassVar
 
+from ..errors import ConfigurationError
 from ..protocols.chat_completions import ChatCompletions
 from ..provider import Provider
 
@@ -33,7 +34,10 @@ class OpenAICompatible(Provider):
     @property
     def api_base(self) -> str:
         configured = getattr(self.config, f"{self.slug}_api_base")
-        return configured or self.default_api_base
+        base = configured or self.default_api_base
+        if base is None:
+            raise ConfigurationError(f"{self.slug}_api_base is required")
+        return str(base)
 
     @property
     def headers(self) -> dict[str, str]:

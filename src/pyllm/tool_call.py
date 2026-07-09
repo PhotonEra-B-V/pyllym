@@ -8,8 +8,8 @@ from typing import Any
 
 @dataclass(slots=True)
 class ToolCall:
-    id: str
-    name: str
+    id: str | None = None
+    name: str | None = None
     arguments: Any = field(default_factory=dict)
     thought_signature: str | None = None
 

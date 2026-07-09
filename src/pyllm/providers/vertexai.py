@@ -28,12 +28,15 @@ class VertexAIGemini(GeminiProtocol):
     """The Gemini protocol over Vertex AI's project-scoped endpoints."""
 
     def completion_url(self) -> str:
+        assert self.model is not None
         return f"{self.provider.model_path(self.model.id)}:generateContent"
 
     def stream_url(self) -> str:
+        assert self.model is not None
         return f"{self.provider.model_path(self.model.id)}:streamGenerateContent?alt=sse"
 
     def embedding_url(self, *, model: str | None = None) -> str:
+        assert model is not None
         return f"{self.provider.model_path(model)}:predict"
 
 

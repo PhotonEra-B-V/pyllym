@@ -51,15 +51,18 @@ class Anthropic(Protocol):
         self,
         messages: list[Message],
         *,
-        tools: dict[str, Tool],
-        temperature: float | None,
-        model: Info,
+        tools: dict[str, Tool] | None = None,
+        temperature: float | None = None,
+        model: Info | None = None,
         stream: bool = False,
         schema: Any = None,
         thinking: Any = None,
         citations: bool = False,
         tool_prefs: dict[str, Any] | None = None,
+        **kwargs: Any,
     ) -> dict[str, Any]:
+        assert model is not None
+        tools = tools or {}
         tool_prefs = tool_prefs or {}
         system_messages = [m for m in messages if m.role == "system"]
         chat_messages = [m for m in messages if m.role != "system"]
@@ -426,7 +429,7 @@ class Anthropic(Protocol):
                 data["index"]: ToolCall(
                     id=None, name=None, arguments=_dig(data, "delta", "partial_json")
                 )
-            }  # type: ignore[arg-type]
+            }
         if data.get("type") == "content_block_start":
             tool_calls = self._parse_tool_calls(data.get("content_block"))
             if tool_calls is None or data.get("index") is None:

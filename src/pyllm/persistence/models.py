@@ -25,7 +25,7 @@ def create_models(Base: type, *, table_prefix: str = "llm_") -> tuple[type, type
     Tables are named ``{table_prefix}chats``, ``..._messages``, ``..._tool_calls``.
     """
 
-    class ToolCall(Base):  # type: ignore[misc, valid-type]
+    class ToolCall(Base):
         __tablename__ = f"{table_prefix}tool_calls"
 
         id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -39,7 +39,7 @@ def create_models(Base: type, *, table_prefix: str = "llm_") -> tuple[type, type
         def to_llm(self) -> LLMToolCall:
             return LLMToolCall(id=self.tool_call_id, name=self.name, arguments=self.arguments or {})
 
-    class Message(Base):  # type: ignore[misc, valid-type]
+    class Message(Base):
         __tablename__ = f"{table_prefix}messages"
 
         id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -117,7 +117,7 @@ def create_models(Base: type, *, table_prefix: str = "llm_") -> tuple[type, type
                 )
             return record
 
-    class Chat(Base):  # type: ignore[misc, valid-type]
+    class Chat(Base):
         __tablename__ = f"{table_prefix}chats"
 
         id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -168,6 +168,6 @@ def create_models(Base: type, *, table_prefix: str = "llm_") -> tuple[type, type
             chat.after_message(lambda *_: _persist())
             return chat
 
-    Chat.MessageModel = Message  # type: ignore[attr-defined]
-    Chat.ToolCallModel = ToolCall  # type: ignore[attr-defined]
+    Chat.MessageModel = Message
+    Chat.ToolCallModel = ToolCall
     return Chat, Message, ToolCall

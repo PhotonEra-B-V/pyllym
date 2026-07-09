@@ -75,15 +75,18 @@ class ChatCompletions(Protocol):
         self,
         messages: list[Message],
         *,
-        tools: dict[str, Tool],
-        temperature: float | None,
-        model: Info,
+        tools: dict[str, Tool] | None = None,
+        temperature: float | None = None,
+        model: Info | None = None,
         stream: bool = False,
         schema: Any = None,
         thinking: Any = None,
         citations: bool = False,
         tool_prefs: dict[str, Any] | None = None,
+        **kwargs: Any,
     ) -> dict[str, Any]:
+        assert model is not None
+        tools = tools or {}
         tool_prefs = tool_prefs or {}
         payload: dict[str, Any] = {
             "model": model.id,
@@ -116,7 +119,10 @@ class ChatCompletions(Protocol):
 
     # --- chat parse ------------------------------------------------------------
     def parse_completion_response(self, response: Any) -> Message:
-        return self._parse_completion_body(response.body, raw=response)
+        message = self._parse_completion_body(response.body, raw=response)
+        if message is None:
+            raise Error(response, "Empty or unparseable completion response")
+        return message
 
     def _parse_completion_body(self, data: Any, *, raw: Any) -> Message | None:
         if not data:
@@ -447,7 +453,7 @@ class ChatCompletions(Protocol):
         *,
         model: str,
         voice: str | None,
-        format: str,
+        format: str | None,
         params: dict[str, Any] | None = None,
         **options: Any,
     ) -> dict[str, Any]:
@@ -465,7 +471,7 @@ class ChatCompletions(Protocol):
         return payload
 
     def parse_speech_response(
-        self, response: Any, *, model: str, voice: str | None, format: str
+        self, response: Any, *, model: str, voice: str | None, format: str | None
     ) -> Speech:
         body = response.content or response.body
         if isinstance(body, str):

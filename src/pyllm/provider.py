@@ -170,8 +170,8 @@ class Provider:
         input: str,
         *,
         model: str,
-        voice: str,
-        format: str,
+        voice: str | None,
+        format: str | None,
         params: dict[str, Any] | None = None,
         **options: Any,
     ) -> Any:
@@ -188,6 +188,21 @@ class Provider:
 
     def files_supported(self) -> bool:
         return self.file_protocol is not None
+
+    async def upload_file(self, file: Any, **options: Any) -> Any:
+        raise NotImplementedError
+
+    async def find_file(self, id: str) -> Any:
+        raise NotImplementedError
+
+    async def download_file(self, id: str) -> bytes:
+        raise NotImplementedError
+
+    def sign_headers(self, method: str, url: str, body: str) -> dict[str, str]:
+        raise NotImplementedError
+
+    def model_path(self, model: str, *, publisher: str = "google") -> str:
+        raise NotImplementedError
 
     # --- config / errors -------------------------------------------------------
     def configured(self) -> bool:
@@ -307,8 +322,8 @@ class Provider:
             return None
         base = self.protocols[name]
         built = type(f"{base.__name__}Batch", (mixin, base), {})
-        self._batch_cache[name] = built  # type: ignore[assignment]
-        return built  # type: ignore[return-value]
+        self._batch_cache[name] = built
+        return built
 
     def _ensure_configured(self) -> None:
         if self.configured():

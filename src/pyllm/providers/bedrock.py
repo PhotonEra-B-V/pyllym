@@ -62,7 +62,7 @@ class Bedrock(Provider):
         # Bedrock requests are signed per-request; no static auth headers.
         return {}
 
-    def parse_error(self, response):  # type: ignore[override]
+    def parse_error(self, response):
         body = getattr(response, "body", None)
         if body is None or body == "":
             return None

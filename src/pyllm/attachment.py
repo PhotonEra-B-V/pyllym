@@ -93,9 +93,9 @@ class Attachment:
 
     def for_llm(self) -> str:
         if self.type == "text":
-            return (
-                f"<file name='{self.filename}' mime_type='{self.mime_type}'>{self.content}</file>"
-            )
+            content = self.content
+            text = content.decode("utf-8", "replace") if isinstance(content, bytes) else content
+            return f"<file name='{self.filename}' mime_type='{self.mime_type}'>{text or ''}</file>"
         return f"data:{self.mime_type};base64,{self.encoded}"
 
     # --- type predicates -------------------------------------------------------
