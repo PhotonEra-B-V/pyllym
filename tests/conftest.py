@@ -1,10 +1,48 @@
 from __future__ import annotations
 
+import inspect
+import json
+import types
+
+import aiohttp
 import pytest
+from aioresponses import aioresponses
+from aioresponses import core as aioresponses_core
 
 import pyllm
 
 from .seed_fixtures import DATA_DIR, seed_all
+
+
+class _CompatClientResponse(aiohttp.ClientResponse):
+    """aioresponses 0.7.9 predates the required ``stream_writer`` argument
+    aiohttp 3.14 added to ``ClientResponse``; supply a no-op stand-in."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("stream_writer", types.SimpleNamespace(output_size=0))
+        super().__init__(*args, **kwargs)
+
+
+if "stream_writer" in inspect.signature(aiohttp.ClientResponse.__init__).parameters:
+    aioresponses_core.ClientResponse = _CompatClientResponse
+
+
+@pytest.fixture
+def mock_http():
+    """Mock the aiohttp transport layer for one test."""
+    with aioresponses() as m:
+        yield m
+
+
+def sent_requests(m: aioresponses) -> list:
+    """All requests recorded by an ``aioresponses`` mock, in a flat list."""
+    return [call for calls in m.requests.values() for call in calls]
+
+
+def sent_json(m: aioresponses) -> str:
+    """The last recorded request's JSON payload, serialized for assertions."""
+    return json.dumps(sent_requests(m)[-1].kwargs.get("json"))
+
 
 _KEYS = {
     "openai_api_key": "sk-test",
@@ -33,12 +71,27 @@ _KEYS = {
 
 
 @pytest.fixture(autouse=True)
+def _isolate_provider_env(monkeypatch):
+    """Strip real provider env vars (OPENAI_API_KEY, ...) so the env-var
+    fallback can't leak a developer's credentials into tests."""
+    for key in pyllm.Configuration._provider_keys:
+        monkeypatch.delenv(key.upper(), raising=False)
+
+
+@pytest.fixture(autouse=True)
 def _configure_keys():
     """Give every provider dummy credentials so construction succeeds."""
     cfg = pyllm.config()
     for key, value in _KEYS.items():
         setattr(cfg, key, value)
     yield
+
+
+@pytest.fixture(autouse=True)
+async def _close_shared_sessions():
+    """Close the per-loop shared aiohttp sessions before the test loop dies."""
+    yield
+    await pyllm.aclose()
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -33,9 +33,11 @@ logger = logging.getLogger("pyllm")
 class Gemini(Protocol):
     # --- endpoints -------------------------------------------------------------
     def completion_url(self) -> str:
+        assert self.model is not None
         return f"models/{self.model.id}:generateContent"
 
     def stream_url(self) -> str:
+        assert self.model is not None
         return f"models/{self.model.id}:streamGenerateContent?alt=sse"
 
     def models_url(self) -> str:
@@ -49,15 +51,18 @@ class Gemini(Protocol):
         self,
         messages: list[Message],
         *,
-        tools: dict[str, Tool],
-        temperature: float | None,
-        model: Info,
+        tools: dict[str, Tool] | None = None,
+        temperature: float | None = None,
+        model: Info | None = None,
         stream: bool = False,
         schema: Any = None,
         thinking: Any = None,
         citations: bool = False,
         tool_prefs: dict[str, Any] | None = None,
+        **kwargs: Any,
     ) -> dict[str, Any]:
+        assert model is not None
+        tools = tools or {}
         if citations and not model.is_citations():
             self._warn_unsupported_citations(model)
         tool_prefs = tool_prefs or {}
@@ -594,8 +599,7 @@ class _MessageFormatter:
 
     def format(self) -> list[dict[str, Any]]:
         formatted: list[dict[str, Any]] = []
-        while self._current_message() is not None:
-            current = self._current_message()
+        while (current := self._current_message()) is not None:
             if self._is_tool_message(current):
                 tool_parts, next_index = self._collect_tool_parts()
                 formatted.append({"role": "user", "parts": tool_parts})
@@ -620,7 +624,11 @@ class _MessageFormatter:
         index = self.index
         while index < len(self.messages) and self._is_tool_message(self.messages[index]):
             tool_message = self.messages[index]
-            tool_name = self.tool_call_names.pop(tool_message.tool_call_id, None)
+            tool_name = (
+                self.tool_call_names.pop(tool_message.tool_call_id, None)
+                if tool_message.tool_call_id is not None
+                else None
+            )
             parts.extend(self.protocol._format_tool_result(tool_message, tool_name))
             index += 1
         return parts, index

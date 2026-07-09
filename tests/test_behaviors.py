@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import httpx
 import pytest
-import respx
 from pydantic import BaseModel
 
 import pyllm
@@ -14,37 +12,36 @@ from pyllm.stream_accumulator import StreamAccumulator
 from pyllm.tokens import Tokens
 from pyllm.tool_call import ToolCall
 
+from .conftest import sent_json
+
 
 # --- structured output ---------------------------------------------------------
 @pytest.mark.asyncio
-@respx.mock
-async def test_structured_output_parses_json_and_sends_schema():
+async def test_structured_output_parses_json_and_sends_schema(mock_http):
     class Recipe(BaseModel):
         title: str
         steps: list[str]
 
-    route = respx.post("https://api.openai.com/v1/chat/completions").mock(
-        return_value=httpx.Response(
-            200,
-            json={
-                "model": "gpt-4o",
-                "choices": [
-                    {
-                        "message": {
-                            "role": "assistant",
-                            "content": '{"title": "Toast", "steps": ["toast bread"]}',
-                        },
-                        "finish_reason": "stop",
-                    }
-                ],
-                "usage": {"prompt_tokens": 1, "completion_tokens": 1},
-            },
-        )
+    mock_http.post(
+        "https://api.openai.com/v1/chat/completions",
+        payload={
+            "model": "gpt-4o",
+            "choices": [
+                {
+                    "message": {
+                        "role": "assistant",
+                        "content": '{"title": "Toast", "steps": ["toast bread"]}',
+                    },
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+        },
     )
     chat = pyllm.create_chat(model="gpt-4o").with_schema(Recipe)
     msg = await chat.ask("recipe?")
     assert msg.content == {"title": "Toast", "steps": ["toast bread"]}
-    assert b'"json_schema"' in route.calls.last.request.content
+    assert '"json_schema"' in sent_json(mock_http)
 
 
 # --- cost ----------------------------------------------------------------------

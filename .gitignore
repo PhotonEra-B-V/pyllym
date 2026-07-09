@@ -20,3 +20,11 @@ htmlcov/
 
 # Generated test fixtures (re-created by tests/seed_fixtures.py)
 tests/fixtures/data/
+
+# pyllm.bdd generated output (re-created from .toml specs; never hand-edit)
+tests/generated/
+*.plan.json
+BRIEF_*.md
+
+# Workflow isolated worktrees (scratch; auto-created by Agent isolation)
+.claude/worktrees/

@@ -93,9 +93,9 @@ class Attachment:
 
     def for_llm(self) -> str:
         if self.type == "text":
-            return (
-                f"<file name='{self.filename}' mime_type='{self.mime_type}'>{self.content}</file>"
-            )
+            content = self.content
+            text = content.decode("utf-8", "replace") if isinstance(content, bytes) else content
+            return f"<file name='{self.filename}' mime_type='{self.mime_type}'>{text or ''}</file>"
         return f"data:{self.mime_type};base64,{self.encoded}"
 
     # --- type predicates -------------------------------------------------------
@@ -187,11 +187,10 @@ class Attachment:
         return None
 
     def _fetch_content(self) -> bytes:
-        import httpx
+        from urllib.request import urlopen
 
-        resp = httpx.get(str(self.source), follow_redirects=True, timeout=30)
-        resp.raise_for_status()
-        return resp.content
+        with urlopen(str(self.source), timeout=30) as resp:
+            return resp.read()
 
     def _determine_mime_type(self) -> str:
         if self.is_provider_file():

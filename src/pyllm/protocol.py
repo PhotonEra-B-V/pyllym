@@ -124,8 +124,8 @@ class Protocol(StreamingMixin):
         input: str,
         *,
         model: str,
-        voice: str,
-        format: str,
+        voice: str | None,
+        format: str | None,
         params: dict[str, Any] | None = None,
         **options: Any,
     ) -> Any:
@@ -188,4 +188,78 @@ class Protocol(StreamingMixin):
         raise NotImplementedError
 
     def parse_list_models_response(self, response: Any, slug: str, capabilities: Any) -> list[Info]:
+        raise NotImplementedError
+
+    # --- embeddings ---
+    def render_embedding_payload(
+        self, text: Any, *, model: str, dimensions: int | None
+    ) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def embedding_url(self, *, model: str | None = None) -> str:
+        raise NotImplementedError
+
+    def parse_embedding_response(self, response: Any, *, model: str, text: Any) -> Any:
+        raise NotImplementedError
+
+    # --- moderation ---
+    def render_moderation_payload(self, input: Any, *, model: str) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def moderation_url(self) -> str:
+        raise NotImplementedError
+
+    def parse_moderation_response(self, response: Any, *, model: str) -> Any:
+        raise NotImplementedError
+
+    # --- images ---
+    def render_image_payload(
+        self,
+        prompt: str,
+        *,
+        model: str,
+        size: str,
+        with_: Any = None,
+        mask: Any = None,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def images_url(self, *, with_: Any = None, mask: Any = None) -> str:
+        raise NotImplementedError
+
+    def parse_image_response(self, response: Any, *, model: str) -> Any:
+        raise NotImplementedError
+
+    # --- speech ---
+    def render_speech_payload(
+        self,
+        input: str,
+        *,
+        model: str,
+        voice: str | None,
+        format: str | None,
+        params: dict[str, Any] | None = None,
+        **options: Any,
+    ) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def speech_url(self, *, model: str | None = None) -> str:
+        raise NotImplementedError
+
+    def parse_speech_response(
+        self, response: Any, *, model: str, voice: str | None, format: str | None
+    ) -> Any:
+        raise NotImplementedError
+
+    # --- transcription ---
+    def render_transcription_payload(
+        self, audio_file: str, *, model: str, language: str | None, **options: Any
+    ) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def transcription_url(self) -> str:
+        raise NotImplementedError
+
+    def parse_transcription_response(self, response: Any, *, model: str) -> Any:
         raise NotImplementedError

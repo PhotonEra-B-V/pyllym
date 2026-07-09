@@ -1,6 +1,6 @@
 """Streaming support.
 
-An async SSE parser over the httpx byte stream. Concrete protocols mix in
+An async SSE parser over the aiohttp byte stream. Concrete protocols mix in
 :class:`StreamingMixin` and implement ``stream_url`` and ``build_chunk``.
 """
 
@@ -71,7 +71,7 @@ class StreamingMixin:
             if on_chunk is not None:
                 result = on_chunk(chunk)
                 if hasattr(result, "__await__"):
-                    await result  # type: ignore[misc]
+                    await result
         message = accumulator.to_message(None)
         logger.debug("Stream completed: %s", message.content)
         return message

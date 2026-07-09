@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import httpx
 import pytest
-import respx
 
 import pyllm
 
@@ -11,10 +9,10 @@ from .seed_fixtures import load_json
 
 
 @pytest.mark.asyncio
-@respx.mock
-async def test_embedding_single_vector():
-    respx.post("https://api.openai.com/v1/embeddings").mock(
-        return_value=httpx.Response(200, json=f.openai_embedding([[0.1, 0.2, 0.3]], tokens=4))
+async def test_embedding_single_vector(mock_http):
+    mock_http.post(
+        "https://api.openai.com/v1/embeddings",
+        payload=f.openai_embedding([[0.1, 0.2, 0.3]], tokens=4),
     )
     emb = await pyllm.embed("hello", model="text-embedding-3-small")
     assert emb.vectors == [0.1, 0.2, 0.3]  # unwrapped for a single input
@@ -22,20 +20,18 @@ async def test_embedding_single_vector():
 
 
 @pytest.mark.asyncio
-@respx.mock
-async def test_embedding_batch_vectors():
-    respx.post("https://api.openai.com/v1/embeddings").mock(
-        return_value=httpx.Response(200, json=f.openai_embedding([[0.1], [0.2]]))
+async def test_embedding_batch_vectors(mock_http):
+    mock_http.post(
+        "https://api.openai.com/v1/embeddings", payload=f.openai_embedding([[0.1], [0.2]])
     )
     emb = await pyllm.embed(["a", "b"], model="text-embedding-3-small")
     assert emb.vectors == [[0.1], [0.2]]  # list input stays nested
 
 
 @pytest.mark.asyncio
-@respx.mock
-async def test_moderation_flagged():
-    respx.post("https://api.openai.com/v1/moderations").mock(
-        return_value=httpx.Response(200, json=f.openai_moderation(flagged=True))
+async def test_moderation_flagged(mock_http):
+    mock_http.post(
+        "https://api.openai.com/v1/moderations", payload=f.openai_moderation(flagged=True)
     )
     result = await pyllm.moderate("something", model="omni-moderation-latest")
     assert result.is_flagged()
@@ -43,10 +39,10 @@ async def test_moderation_flagged():
 
 
 @pytest.mark.asyncio
-@respx.mock
-async def test_image_generation():
-    respx.post("https://api.openai.com/v1/images/generations").mock(
-        return_value=httpx.Response(200, json=f.openai_image(url="https://cdn/cat.png"))
+async def test_image_generation(mock_http):
+    mock_http.post(
+        "https://api.openai.com/v1/images/generations",
+        payload=f.openai_image(url="https://cdn/cat.png"),
     )
     image = await pyllm.paint("a cat", model="gpt-image-1.5")
     assert image.url == "https://cdn/cat.png"
@@ -54,12 +50,9 @@ async def test_image_generation():
 
 
 @pytest.mark.asyncio
-@respx.mock
-async def test_chat_from_seeded_fixture_file():
+async def test_chat_from_seeded_fixture_file(mock_http):
     # Proves the on-disk seeded fixture drives the full parse stack.
-    respx.post("https://api.openai.com/v1/chat/completions").mock(
-        return_value=httpx.Response(200, json=load_json("openai_chat"))
-    )
+    mock_http.post("https://api.openai.com/v1/chat/completions", payload=load_json("openai_chat"))
     msg = await pyllm.create_chat(model="gpt-4o").ask("hi")
     assert msg.content == "Hello!"
     assert msg.input_tokens == 10

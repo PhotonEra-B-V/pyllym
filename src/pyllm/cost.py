@@ -152,7 +152,7 @@ class Cost:
             return None
         total = 0.0
         for _, token_count, price in self._image_input_parts():
-            if token_count is None or int(token_count) == 0:
+            if token_count is None or int(token_count) == 0 or price is None:
                 continue
             total += int(token_count) * price / PER_MILLION
         return total

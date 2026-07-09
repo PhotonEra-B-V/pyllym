@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import httpx
 import pytest
-import respx
+from aioresponses import CallbackResult
 
 import pyllm
 from pyllm.chunk import Chunk
@@ -63,22 +62,45 @@ def test_dict_content_does_not_leak_text_into_attachments():
     assert msg.content == "hello"
 
 
-def test_config_typo_read_raises_attribute_error():
+def test_config_typo_read_raises_attribute_error(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     cfg = pyllm.Configuration()
     with pytest.raises(AttributeError):
         _ = cfg.opnai_api_key
     assert cfg.openai_api_key is None  # registered option, unset -> None
 
 
+def test_config_unset_provider_option_falls_back_to_env(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-from-env")
+    cfg = pyllm.Configuration()
+    assert cfg.openai_api_key == "sk-from-env"
+
+
+def test_config_code_value_wins_over_env(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-from-env")
+    cfg = pyllm.Configuration()
+    cfg.openai_api_key = "sk-from-code"
+    assert cfg.openai_api_key == "sk-from-code"
+    # un-setting (None or blank) restores the env fallback
+    cfg.openai_api_key = None
+    assert cfg.openai_api_key == "sk-from-env"
+    cfg.openai_api_key = "sk-from-code"
+    cfg.openai_api_key = "   "
+    assert cfg.openai_api_key == "sk-from-env"
+
+
+def test_config_blank_env_value_reads_as_none(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "   ")
+    cfg = pyllm.Configuration()
+    assert cfg.openai_api_key is None
+
+
 @pytest.mark.asyncio
-@respx.mock
-async def test_bare_json_error_body_in_200_stream_raises():
-    respx.post("https://api.openai.com/v1/chat/completions").mock(
-        return_value=httpx.Response(
-            200,
-            content=b'{"error": {"type": "overloaded_error", "message": "Overloaded"}}',
-            headers={"content-type": "application/json"},
-        )
+async def test_bare_json_error_body_in_200_stream_raises(mock_http):
+    mock_http.post(
+        "https://api.openai.com/v1/chat/completions",
+        body=b'{"error": {"type": "overloaded_error", "message": "Overloaded"}}',
+        headers={"content-type": "application/json"},
     )
     chat = pyllm.create_chat(model="gpt-4o")
     with pytest.raises(OverloadedError):
@@ -87,11 +109,10 @@ async def test_bare_json_error_body_in_200_stream_raises():
 
 
 @pytest.mark.asyncio
-@respx.mock
-async def test_stream_early_break_cancels_producer():
+async def test_stream_early_break_cancels_producer(mock_http):
     state = {"requests": 0}
 
-    def responder(request):
+    def responder(url, **kwargs):
         state["requests"] += 1
         sse = (
             b'data: {"model":"gpt-4o","choices":[{"delta":{"content":"one"}}]}\n\n'
@@ -99,9 +120,9 @@ async def test_stream_early_break_cancels_producer():
             b'data: {"model":"gpt-4o","choices":[{"delta":{},"finish_reason":"stop"}]}\n\n'
             b"data: [DONE]\n\n"
         )
-        return httpx.Response(200, content=sse, headers={"content-type": "text/event-stream"})
+        return CallbackResult(body=sse, headers={"content-type": "text/event-stream"})
 
-    respx.post("https://api.openai.com/v1/chat/completions").mock(side_effect=responder)
+    mock_http.post("https://api.openai.com/v1/chat/completions", callback=responder, repeat=True)
     chat = pyllm.create_chat(model="gpt-4o")
     async for _chunk in chat.stream("hi"):
         break  # early exit must not raise and must not hang
@@ -121,21 +142,19 @@ def test_fal_queue_base_honors_api_base_override():
 
 
 @pytest.mark.asyncio
-@respx.mock
-async def test_shared_client_reused_across_chats():
+async def test_shared_client_reused_across_chats(mock_http):
     from pyllm.connection import _CLIENT_CACHE
 
-    respx.post("https://api.openai.com/v1/chat/completions").mock(
-        return_value=httpx.Response(
-            200,
-            json={
-                "model": "gpt-4o",
-                "choices": [
-                    {"message": {"role": "assistant", "content": "hi"}, "finish_reason": "stop"}
-                ],
-                "usage": {"prompt_tokens": 1, "completion_tokens": 1},
-            },
-        )
+    mock_http.post(
+        "https://api.openai.com/v1/chat/completions",
+        payload={
+            "model": "gpt-4o",
+            "choices": [
+                {"message": {"role": "assistant", "content": "hi"}, "finish_reason": "stop"}
+            ],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+        },
+        repeat=True,
     )
     a = pyllm.create_chat(model="gpt-4o")
     b = pyllm.create_chat(model="gpt-4o")

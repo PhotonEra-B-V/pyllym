@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import httpx
 import pytest
-import respx
+from aioresponses import CallbackResult, aioresponses
 
 import pyllm
 
 from . import factories as f
+from .conftest import sent_requests
 
 # provider slug -> chat/completions base URL
 OPENAI_COMPATIBLE = {
@@ -32,13 +32,11 @@ OPENAI_COMPATIBLE = {
 @pytest.mark.parametrize("provider,base", sorted(OPENAI_COMPATIBLE.items()))
 @pytest.mark.asyncio
 async def test_openai_compatible_chat(provider: str, base: str):
-    with respx.mock:
-        route = respx.post(f"{base}/chat/completions").mock(
-            return_value=httpx.Response(200, json=f.openai_chat(f"reply from {provider}"))
-        )
+    with aioresponses() as m:
+        m.post(f"{base}/chat/completions", payload=f.openai_chat(f"reply from {provider}"))
         chat = pyllm.create_chat(model="some-model", provider=provider, assume_model_exists=True)
         msg = await chat.ask("hi")
-        assert route.called
+        assert sent_requests(m)
         assert msg.content == f"reply from {provider}"
         assert msg.input_tokens == 10
 
@@ -52,22 +50,23 @@ async def test_openai_compatible_tool_loop(provider: str, base: str):
         def execute(self, *, city: str):
             return f"Sunny in {city}"
 
-    with respx.mock:
+    with aioresponses() as m:
         calls = {"n": 0}
 
-        def responder(request):
+        def responder(url, **kwargs):
             calls["n"] += 1
             if calls["n"] == 1:
-                return httpx.Response(
-                    200,
-                    json=f.openai_chat(tool_calls=f.openai_tool_call("weather", {"city": "Rome"})),
+                return CallbackResult(
+                    payload=f.openai_chat(
+                        tool_calls=f.openai_tool_call("weather", {"city": "Rome"})
+                    )
                 )
-            return httpx.Response(200, json=f.openai_chat("Rome is sunny."))
+            return CallbackResult(payload=f.openai_chat("Rome is sunny."))
 
-        respx.post(f"{base}/chat/completions").mock(side_effect=responder)
+        m.post(f"{base}/chat/completions", callback=responder, repeat=True)
         chat = pyllm.create_chat(
             model="some-model", provider=provider, assume_model_exists=True
         ).with_tool(Weather)
         msg = await chat.ask("weather in Rome?")
         assert msg.content == "Rome is sunny."
-        assert [m.role for m in chat.messages] == ["user", "assistant", "tool", "assistant"]
+        assert [m2.role for m2 in chat.messages] == ["user", "assistant", "tool", "assistant"]

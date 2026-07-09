@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 from .. import utils
 from ..chunk import Chunk
 from ..content import Content, RawContent
-from ..errors import UnsupportedAttachmentError
+from ..errors import Error, UnsupportedAttachmentError
 from ..message import Message
 from ..model.info import Info
 from ..protocol import Protocol
@@ -44,9 +44,11 @@ class Converse(Protocol):
 
     # --- endpoints -------------------------------------------------------------
     def completion_url(self) -> str:
+        assert self.model is not None
         return f"/model/{self.model.id}/converse"
 
     def stream_url(self) -> str:
+        assert self.model is not None
         return f"/model/{self.model.id}/converse-stream"
 
     # --- signed sync response --------------------------------------------------
@@ -65,15 +67,18 @@ class Converse(Protocol):
         self,
         messages: list[Message],
         *,
-        tools: dict[str, Tool],
-        temperature: float | None,
-        model: Info,
+        tools: dict[str, Tool] | None = None,
+        temperature: float | None = None,
+        model: Info | None = None,
         stream: bool = False,
         schema: Any = None,
         thinking: Any = None,
         citations: bool = False,
         tool_prefs: dict[str, Any] | None = None,
+        **kwargs: Any,
     ) -> dict[str, Any]:
+        assert model is not None
+        tools = tools or {}
         if citations:
             self._warn_unsupported_citations(model)
         tool_prefs = tool_prefs or {}
@@ -103,8 +108,11 @@ class Converse(Protocol):
         )
 
     # --- parse -----------------------------------------------------------------
-    def parse_completion_response(self, response: Any) -> Message | None:
-        return self._parse_completion_body(response.body, raw=response)
+    def parse_completion_response(self, response: Any) -> Message:
+        message = self._parse_completion_body(response.body, raw=response)
+        if message is None:
+            raise Error(response, "Empty or unparseable completion response")
+        return message
 
     def _parse_completion_body(self, data: Any, *, raw: Any) -> Message | None:
         if not data:
@@ -416,6 +424,7 @@ class Converse(Protocol):
         effort = str(thinking.effort or "")
         if effort == "" or effort == "none":
             return None
+        assert self.model is not None
         if self.reasoning_embedded(self.model):
             return {"reasoning_config": {"type": "enabled", "reasoning_effort": effort}}
         return {"reasoning_effort": effort}
@@ -529,7 +538,7 @@ class Converse(Protocol):
         input_ = _dig(self._normalized_delta(event), "toolUse", "input")
         if input_ is None:
             return None
-        return {None: ToolCall(id=None, name=None, arguments=input_)}  # type: ignore[arg-type]
+        return {None: ToolCall(id=None, name=None, arguments=input_)}
 
     def _normalized_delta(self, event: dict[str, Any]) -> dict[str, Any]:
         delta = _dig(event, "contentBlockDelta", "delta") or event.get("delta") or {}

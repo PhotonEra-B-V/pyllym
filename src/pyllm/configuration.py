@@ -2,7 +2,10 @@
 
 A plain object with known system options plus a permissive bag for
 provider-specific keys (``openai_api_key``, ``anthropic_api_base``, ...),
-registered when providers register. Unknown provider option access returns
+registered when providers register. A provider option that was never set in
+code falls back to the environment variable named after it in uppercase
+(``openai_api_key`` -> ``OPENAI_API_KEY``); values set via
+:func:`pyllm.configure` always win. Unknown provider option access returns
 ``None``.
 """
 
@@ -47,8 +50,10 @@ class Configuration:
     """Holds global and provider-specific options.
 
     Provider option keys (e.g. ``openai_api_key``) are registered via
-    :meth:`register_provider_options` when providers register themselves, so
-    reading an un-set provider option yields ``None`` rather than raising.
+    :meth:`register_provider_options` when providers register themselves.
+    Reading an un-set provider option falls back to the uppercase environment
+    variable of the same name (``OPENAI_API_KEY``), then ``None`` — it never
+    raises.
     """
 
     # Provider option names are global knowledge (registered once per provider
@@ -72,23 +77,29 @@ class Configuration:
             )
 
     def register_provider_options(self, keys: list[str]) -> None:
+        # Only record the key: leaving the attribute unset keeps reads going
+        # through __getattr__, where the env-var fallback lives.
         for key in keys:
             type(self)._provider_keys.add(key)
-            if not hasattr(self, key):
-                object.__setattr__(self, key, None)
 
     def __getattr__(self, name: str) -> Any:
         # Only reached when the attribute is not set normally. Registered
-        # provider options read as None when unset; anything else is a typo
-        # and should fail loudly instead of silently reading as None.
+        # provider options fall back to the matching env var, then None;
+        # anything else is a typo and should fail loudly instead of silently
+        # reading as None.
         if not name.startswith("_") and name in self._provider_keys:
-            return None
+            value = os.environ.get(name.upper())
+            return value if value and value.strip() else None
         raise AttributeError(f"Unknown configuration option: {name!r}")
 
     def __setattr__(self, name: str, value: Any) -> None:
         # Empty/whitespace strings normalize to None.
         if isinstance(value, str) and not value.strip():
             value = None
+        if value is None and name in self._provider_keys:
+            # Un-setting a provider option restores the env-var fallback.
+            self.__dict__.pop(name, None)
+            return
         object.__setattr__(self, name, value)
 
     def to_dict(self, *, redact_secrets: bool = True) -> dict[str, Any]:
