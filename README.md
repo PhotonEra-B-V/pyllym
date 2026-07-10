@@ -1,4 +1,4 @@
-# pyllm
+# pyllym
 
 <img width="720" height="405" alt="wdmbP" src="https://github.com/user-attachments/assets/184527c0-e550-40dd-b2d0-d9517b0ee542" />
 
