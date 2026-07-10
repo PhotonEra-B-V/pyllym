@@ -1,5 +1,8 @@
 # pyllm
 
+<img width="1280" height="720" alt="wdmbP" src="https://github.com/user-attachments/assets/184527c0-e550-40dd-b2d0-d9517b0ee542" />
+
+
 **One delightful, async-first Python framework for every major AI provider.**
 Build AI agents, chatbots, RAG apps, and multimodal workflows in clean,
 expressive Python.
