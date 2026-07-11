@@ -177,6 +177,7 @@ def _register_builtin_providers() -> None:
         ("perplexity", "Perplexity"),
         ("xai", "XAI"),
         ("gpustack", "GPUStack"),
+        ("vllm", "VLLM"),
         ("azure", "Azure"),
         ("bedrock", "Bedrock"),
         ("vertexai", "VertexAI"),

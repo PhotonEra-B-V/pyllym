@@ -33,6 +33,17 @@ dependencies = [
 db = ["sqlalchemy>=2.0"]
 celery = ["celery>=5.4"]
 mime = ["puremagic>=1.28"]
+# Scientific stack for the data-analysis examples (examples/stats.py). Opt-in:
+# `pip install -e ".[sci]"`. Not needed by the core library.
+sci = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "pandas>=2.0",
+    "matplotlib>=3.8",
+    "seaborn>=0.13",
+    "scikit-learn>=1.3",
+    "sympy>=1.12",
+]
 dev = [
     "pytest>=8",
     "pytest-asyncio>=0.24",
@@ -64,6 +75,7 @@ ignore = ["B008", "RUF012", "SIM108", "SIM105", "RUF005", "UP047"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["E501"]
+"examples/*" = ["E501"]  # example scripts embed long data (e.g. quote strings)
 
 [tool.mypy]
 python_version = "3.13"

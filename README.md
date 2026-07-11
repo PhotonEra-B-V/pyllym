@@ -12,6 +12,11 @@ Works with OpenAI, Anthropic, Google Gemini, AWS Bedrock, DeepSeek, Mistral,
 Ollama (local), OpenRouter, Perplexity, Vertex AI, xAI, GPUStack, Azure, and any
 OpenAI-compatible API — behind one consistent interface.
 
+> [!NOTE]
+> **Alpha release.** This is an early, experimental alpha — we are still
+> testing it. APIs may change without notice and things may break. Not
+> recommended for production use.
+
 ```python
 import pyllm
 
@@ -388,6 +393,23 @@ pytest
 ## Something is missing
 
 If you feel like the library is missing something like a new LLM or existing one, that you think shold be there then can you open and issue for that, and I'll see what I can do about that.
+
+## TDG (test-driven generator)
+
+> [!WARNING]
+> **Use at your own responsibility.** This project ships an automated
+> test-driven generator (TDG, under `pyllm.tdg`) that turns a TOML spec into a
+> red pytest suite plus build briefs. When generating, it inspects the module
+> under test for its real dependencies (static AST read, runtime-import
+> fallback) and cross-checks them against the spec's declared imports, so the
+> scaffolding reflects the code's actual collaborators rather than a stale
+> hand-written surface. Each run writes into a timestamped output directory
+> with a `_DONE.json` completion marker and a `latest.json` pointer, so a
+> subsequent run skips specs that haven't changed and only regenerates what
+> did. The generated output is **not** guaranteed to be
+> correct, complete, or safe. You are solely responsible for reviewing,
+> testing, and validating anything it produces before relying on it. The
+> maintainers accept no liability for any outcomes resulting from its use.
 
 ## License
 
