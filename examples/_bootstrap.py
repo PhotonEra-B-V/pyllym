@@ -26,6 +26,6 @@ def setup() -> None:
     pyllm.configure(lambda c: setattr(c, "ollama_api_base", OLLAMA_BASE))
 
 
-def chat():
-    """A fresh chat bound to the local Gemma model."""
-    return pyllm.create_chat(model=MODEL, provider="ollama")
+def chat(model: str | None = None):
+    """A fresh chat bound to a local Ollama model (defaults to Gemma)."""
+    return pyllm.create_chat(model=model or MODEL, provider="ollama")

@@ -70,3 +70,20 @@ async def test_openai_compatible_tool_loop(provider: str, base: str):
         msg = await chat.ask("weather in Rome?")
         assert msg.content == "Rome is sunny."
         assert [m2.role for m2 in chat.messages] == ["user", "assistant", "tool", "assistant"]
+
+
+@pytest.mark.asyncio
+async def test_vllm_local_chat():
+    """vLLM is self-hosted: base is required config, auth optional."""
+    base = "http://localhost:8000/v1"
+    pyllm.config().vllm_api_base = base
+    with aioresponses() as m:
+        m.post(f"{base}/chat/completions", payload=f.openai_chat("reply from vllm"))
+        chat = pyllm.create_chat(model="meta-llama/Llama-3.1-8B-Instruct", provider="vllm")
+        msg = await chat.ask("hi")
+        requests = sent_requests(m)
+        assert requests
+        assert msg.content == "reply from vllm"
+        # No api key configured -> no Authorization header sent.
+        headers = requests[-1].kwargs.get("headers") or {}
+        assert "authorization" not in {k.lower() for k in headers}
