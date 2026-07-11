@@ -162,7 +162,6 @@ async def build(
         latest = read_latest(out)
     else:  # flat, single-directory mode — no run bookkeeping
         run_dir = out
-        latest = None
     run_dir.mkdir(parents=True, exist_ok=True)
 
     conftest = run_dir / "conftest.py"
