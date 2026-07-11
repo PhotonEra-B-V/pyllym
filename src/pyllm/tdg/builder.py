@@ -158,11 +158,9 @@ async def build(
     # Each build lands in its own timestamped run dir; latest.json (written on
     # success) lets the *next* build skip specs it already generated unchanged.
     if use_runs:
-        stamp = run_stamp(now or utc_now())
-        run_dir = out / stamp
+        run_dir = out / run_stamp(now or utc_now())
         latest = read_latest(out)
     else:  # flat, single-directory mode — no run bookkeeping
-        stamp = ""
         run_dir = out
         latest = None
     run_dir.mkdir(parents=True, exist_ok=True)
