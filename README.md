@@ -9,8 +9,8 @@ Build AI agents, chatbots, RAG apps, and multimodal workflows in clean,
 expressive Python.
 
 Works with OpenAI, Anthropic, Google Gemini, AWS Bedrock, DeepSeek, Mistral,
-Ollama (local), OpenRouter, Perplexity, Vertex AI, xAI, GPUStack, Azure, and any
-OpenAI-compatible API — behind one consistent interface.
+Ollama (local), vLLM (local), OpenRouter, Perplexity, Vertex AI, xAI, GPUStack,
+Azure, and any OpenAI-compatible API — behind one consistent interface.
 
 > [!NOTE]
 > **Alpha release.** This is an early, experimental alpha — we are still
@@ -353,6 +353,38 @@ Review the plan and tests **before** starting implementation — from that
 point on the suite is the specification, and generated tests are read-only.
 No extra dependencies are required.
 
+### TDG — dependency-aware, incremental variant
+
+> [!WARNING]
+> **Use at your own responsibility.** The generated output is **not**
+> guaranteed to be correct, complete, or safe. You are solely responsible for
+> reviewing, testing, and validating anything it produces before relying on it.
+> The maintainers accept no liability for any outcomes resulting from its use.
+
+`pyllm.tdg` is a newer sibling of `pyllm.bdd` with the same TOML front-end,
+two-mode planning, template rendering, and AST safety gate — plus two additions:
+
+- **Dependency introspection** — it inspects the module under test for its real
+  dependencies (static AST read, with a runtime-import fallback) and
+  cross-checks them against the spec's declared imports, so the scaffolding
+  reflects the code's actual collaborators rather than a stale hand-written
+  surface.
+- **Incremental runs** — each run writes into a timestamped output directory
+  with a `_DONE.json` completion marker and a `latest.json` pointer, so a
+  subsequent run skips specs that haven't changed and only regenerates what did.
+
+The interface mirrors `pyllm.bdd`:
+
+```python
+from pyllm.tdg import build
+
+results = await build("specs/", "tests/generated", model="gpt-5.4")
+```
+
+```bash
+python -m pyllm.tdg specs/ --out tests/generated --model gpt-5.4
+```
+
 ## Supported providers
 
 | Provider | Status |
@@ -363,7 +395,7 @@ No extra dependencies are required.
 | DeepSeek, Mistral, xAI, Perplexity, OpenRouter | ✅ (OpenAI-compatible) |
 | NVIDIA NIM, Cerebras, Hugging Face, Databricks | ✅ (OpenAI-compatible) |
 | Qwen (DashScope), Zhipu GLM, Moonshot Kimi, Doubao, ERNIE, MiniMax | ✅ (OpenAI-compatible) |
-| Ollama, GPUStack (local) | ✅ |
+| Ollama, GPUStack, vLLM (local) | ✅ |
 | fal.ai (image via `paint`, video via `animate`) | ✅ FLUX.2, HunyuanImage, Qwen-Image, LTX, Wan, HunyuanVideo |
 | Azure OpenAI | ✅ (v1-compatible endpoint) |
 | AWS Bedrock (Converse) | ✅ non-streaming (SigV4 signed); streaming WIP |
@@ -393,23 +425,6 @@ pytest
 ## Something is missing
 
 If you feel like the library is missing something like a new LLM or existing one, that you think shold be there then can you open and issue for that, and I'll see what I can do about that.
-
-## TDG (test-driven generator)
-
-> [!WARNING]
-> **Use at your own responsibility.** This project ships an automated
-> test-driven generator (TDG, under `pyllm.tdg`) that turns a TOML spec into a
-> red pytest suite plus build briefs. When generating, it inspects the module
-> under test for its real dependencies (static AST read, runtime-import
-> fallback) and cross-checks them against the spec's declared imports, so the
-> scaffolding reflects the code's actual collaborators rather than a stale
-> hand-written surface. Each run writes into a timestamped output directory
-> with a `_DONE.json` completion marker and a `latest.json` pointer, so a
-> subsequent run skips specs that haven't changed and only regenerates what
-> did. The generated output is **not** guaranteed to be
-> correct, complete, or safe. You are solely responsible for reviewing,
-> testing, and validating anything it produces before relying on it. The
-> maintainers accept no liability for any outcomes resulting from its use.
 
 ## License
 
