@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from aioresponses import CallbackResult, aioresponses
 
-import pyllm
+import pyllym
 
 from . import factories as f
 from .conftest import sent_requests
@@ -34,7 +34,7 @@ OPENAI_COMPATIBLE = {
 async def test_openai_compatible_chat(provider: str, base: str):
     with aioresponses() as m:
         m.post(f"{base}/chat/completions", payload=f.openai_chat(f"reply from {provider}"))
-        chat = pyllm.create_chat(model="some-model", provider=provider, assume_model_exists=True)
+        chat = pyllym.create_chat(model="some-model", provider=provider, assume_model_exists=True)
         msg = await chat.ask("hi")
         assert sent_requests(m)
         assert msg.content == f"reply from {provider}"
@@ -44,7 +44,7 @@ async def test_openai_compatible_chat(provider: str, base: str):
 @pytest.mark.parametrize("provider,base", sorted(OPENAI_COMPATIBLE.items()))
 @pytest.mark.asyncio
 async def test_openai_compatible_tool_loop(provider: str, base: str):
-    class Weather(pyllm.Tool):
+    class Weather(pyllym.Tool):
         description = "weather"
 
         def execute(self, *, city: str):
@@ -64,7 +64,7 @@ async def test_openai_compatible_tool_loop(provider: str, base: str):
             return CallbackResult(payload=f.openai_chat("Rome is sunny."))
 
         m.post(f"{base}/chat/completions", callback=responder, repeat=True)
-        chat = pyllm.create_chat(
+        chat = pyllym.create_chat(
             model="some-model", provider=provider, assume_model_exists=True
         ).with_tool(Weather)
         msg = await chat.ask("weather in Rome?")
@@ -76,10 +76,10 @@ async def test_openai_compatible_tool_loop(provider: str, base: str):
 async def test_vllm_local_chat():
     """vLLM is self-hosted: base is required config, auth optional."""
     base = "http://localhost:8000/v1"
-    pyllm.config().vllm_api_base = base
+    pyllym.config().vllm_api_base = base
     with aioresponses() as m:
         m.post(f"{base}/chat/completions", payload=f.openai_chat("reply from vllm"))
-        chat = pyllm.create_chat(model="meta-llama/Llama-3.1-8B-Instruct", provider="vllm")
+        chat = pyllym.create_chat(model="meta-llama/Llama-3.1-8B-Instruct", provider="vllm")
         msg = await chat.ask("hi")
         requests = sent_requests(m)
         assert requests

@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
-from pyllm.persistence import create_models
+from pyllym.persistence import create_models
 
 
 class Base(DeclarativeBase):

@@ -1,7 +1,7 @@
 """Tool / function-calling loop against local Gemma 4.
 
 Gemma 4 in Ollama advertises the ``tools`` capability, so the model can call
-this ``Weather`` tool and pyllm runs the full model -> tool -> model loop.
+this ``Weather`` tool and pyllym runs the full model -> tool -> model loop.
 
     python examples/tools.py
 """
@@ -12,7 +12,7 @@ import asyncio
 
 import _bootstrap as boot
 
-from pyllm import Tool
+from pyllym import Tool
 
 
 class Weather(Tool):

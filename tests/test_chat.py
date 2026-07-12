@@ -6,8 +6,8 @@ import re
 import pytest
 from aioresponses import CallbackResult
 
-import pyllm
-from pyllm import Tool
+import pyllym
+from pyllym import Tool
 
 
 @pytest.mark.asyncio
@@ -23,7 +23,7 @@ async def test_openai_chat(mock_http):
             "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
         },
     )
-    chat = pyllm.create_chat(model="gpt-4o")
+    chat = pyllym.create_chat(model="gpt-4o")
     msg = await chat.ask("Hello")
     assert msg.content == "Hi!"
     assert msg.input_tokens == 10
@@ -42,7 +42,7 @@ async def test_anthropic_chat(mock_http):
             "usage": {"input_tokens": 12, "output_tokens": 7},
         },
     )
-    chat = pyllm.create_chat(model="claude-sonnet-4-6")
+    chat = pyllym.create_chat(model="claude-sonnet-4-6")
     msg = await chat.ask("Hello")
     assert msg.content == "Hello from Claude"
     assert msg.output_tokens == 7
@@ -100,7 +100,7 @@ async def test_tool_loop(mock_http):
         )
 
     mock_http.post("https://api.openai.com/v1/chat/completions", callback=responder, repeat=True)
-    chat = pyllm.create_chat(model="gpt-4o").with_tool(WeatherTool)
+    chat = pyllym.create_chat(model="gpt-4o").with_tool(WeatherTool)
     msg = await chat.ask("Weather in Paris?")
     assert msg.content == "It is sunny in Paris."
     assert [m.role for m in chat.messages] == ["user", "assistant", "tool", "assistant"]
@@ -119,7 +119,7 @@ async def test_streaming(mock_http):
         body=sse,
         headers={"content-type": "text/event-stream"},
     )
-    chat = pyllm.create_chat(model="gpt-4o")
+    chat = pyllym.create_chat(model="gpt-4o")
     chunks = [c.content async for c in chat.stream("Hi")]
     assert "".join(c for c in chunks if c) == "Hello!"
     assert chat.messages[-1].content == "Hello!"
@@ -140,7 +140,7 @@ async def test_gemini_chat(mock_http):
             "usageMetadata": {"promptTokenCount": 8, "candidatesTokenCount": 4},
         },
     )
-    chat = pyllm.create_chat(model="gemini-2.5-flash")
+    chat = pyllym.create_chat(model="gemini-2.5-flash")
     msg = await chat.ask("Hello")
     assert msg.content == "Hi from Gemini"
     assert msg.input_tokens == 8
@@ -187,7 +187,7 @@ async def test_anthropic_tool_loop(mock_http):
         )
 
     mock_http.post("https://api.anthropic.com/v1/messages", callback=responder, repeat=True)
-    chat = pyllm.create_chat(model="claude-sonnet-4-6").with_tool(WeatherTool)
+    chat = pyllym.create_chat(model="claude-sonnet-4-6").with_tool(WeatherTool)
     msg = await chat.ask("Weather in Paris?")
     assert msg.content == "It is sunny in Paris."
     assert [m.role for m in chat.messages] == ["user", "assistant", "tool", "assistant"]

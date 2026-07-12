@@ -4,14 +4,14 @@ import re
 
 import pytest
 
-import pyllm
+import pyllym
 
 from . import factories as f
 from .conftest import sent_requests
 
 
 def _bedrock_model_id() -> str:
-    ids = [m.id for m in pyllm.models.all() if m.provider == "bedrock"]
+    ids = [m.id for m in pyllym.models.all() if m.provider == "bedrock"]
     assert ids, "expected bedrock models in the registry"
     return ids[0]
 
@@ -22,7 +22,7 @@ async def test_bedrock_converse_roundtrip(mock_http):
         re.compile(r"https://bedrock-runtime\..*\.amazonaws\.com/model/.*/converse$"),
         payload=f.bedrock_converse("Bedrock says hi"),
     )
-    chat = pyllm.create_chat(model=_bedrock_model_id(), provider="bedrock")
+    chat = pyllym.create_chat(model=_bedrock_model_id(), provider="bedrock")
     msg = await chat.ask("hi")
     requests = sent_requests(mock_http)
     assert requests
@@ -35,7 +35,7 @@ async def test_bedrock_converse_roundtrip(mock_http):
 
 
 def test_bedrock_render_payload_shape():
-    chat = pyllm.create_chat(model=_bedrock_model_id(), provider="bedrock")
+    chat = pyllym.create_chat(model=_bedrock_model_id(), provider="bedrock")
     chat.add_user_message("hello")
     payload = chat.render()
     assert payload["messages"][0]["role"] == "user"

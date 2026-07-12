@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "version": 1,
+  "title": "reactullm-sdd request-mode planning contract",
+  "description": "Language-neutral contract between reactullm-sdd (TypeScript; compiles a TOML spec into a red React Testing Library suite) and pyllum (Python async LLM framework). In request mode reactullm needs a model to fill a TestPlan via structured output. pyllum reads THIS file, sends `planner_instructions` as the system prompt, constrains its structured-output Chat to `test_plan_schema`, and returns one TestPlan object. Neither repo imports the other. GENERATED from src/schema.ts and src/planner.ts by scripts/gen-contract.mts — do not hand-edit; regenerate and bump `version`.",
+  "seam": {
+    "role": "reactullm's ChatClient (src/chat.ts): withInstructions → withSchema → ask",
+    "operations": {
+      "with_instructions": "set the system prompt to `planner_instructions` (fluent)",
+      "with_schema": "constrain the response to `test_plan_schema` (fluent)",
+      "ask": "run one structured-output turn; return the parsed TestPlan object"
+    },
+    "response": {
+      "role": "assistant",
+      "content": "A JSON object honoring test_plan_schema. When the model cannot honor the schema, content is a string instead — reactullm treats that as an error."
+    }
+  },
+  "planner_instructions": "You are a React test architect. You receive one behavior specification (a\ncomponent/hook API surface plus rules, edge cases, and optional sequence\ndiagrams) and produce a test plan that will be rendered into a failing Vitest +\nReact Testing Library suite. The suite is written BEFORE any implementation\nexists — it is the specification an implementer must satisfy without editing the\ntests.\n\nRules:\n- Commit to the public API surface exactly as given: module path, imports, and\n  the exact TypeScript signatures. Every test must exercise only that surface.\n- Write one or more test cases covering the rules, plus derived edge cases\n  (boundaries, error/empty/loading states) marked edgeCase=true. Do not invent\n  behavior the spec does not imply.\n- 'given' entries, fixture bodies, 'when', and 'then' must be executable\n  TypeScript/JSX against the declared API and React Testing Library. In 'given',\n  set up props/mocks/store/router and RENDER the component with render(<... />),\n  or render a hook with renderHook(() => useThing(...)). One statement per entry.\n- 'when' is the SINGLE act, an expression assigned to `result`: a user\n  interaction via userEvent (e.g. userEvent.click(screen.getByRole('button')))\n  or a hook call wrapped in act(...). Include `await` and set isAsync=true when\n  the act is async (userEvent, findBy*, waitFor almost always are). For a pure\n  render assertion where the arrange step already rendered, set when = \"None\".\n- 'then' entries are COMPLETE RTL assertion statements, each including the\n  expect(...) wrapper, e.g. expect(screen.getByRole('button')).toBeDisabled()\n  or expect(onSearch).toHaveBeenCalledWith('hello'). Do NOT write a bare boolean\n  or prefix with 'assert' — write the line exactly as it appears in the test.\n- Prefer real user-visible queries (getByRole/getByLabelText/findByText) and\n  jest.fn() spies over deep mocks. Use fixtures only for setup shared by several\n  cases; fixture bodies end with 'return'.\n- testName values must be unique, human-readable it(...) titles.\n- The harness is Jest + React Testing Library. describe/it/expect/jest are\n  AMBIENT globals (do not import them). render/screen/userEvent/renderHook/act/\n  waitFor are already imported by the generated file, and jest-dom matchers are\n  registered by the project setup — do NOT add import statements for them (or\n  anything else) in any string; imports are rejected by the safety gate.\n\nCOVERAGE IS MECHANICALLY ENFORCED — the build fails if any id is uncovered:\n- Set 'covers' on each test case to the ids it exercises. Every rule id, every\n  edge-case id, and every sequence-diagram message id listed below MUST appear\n  in some case's 'covers'. Never invent ids; only claim ids that were given.\n\nWhen sequence diagrams are present, they are binding collaboration contracts\n(user → component → callback/store/router, in order):\n- Design the API so collaborators named in a diagram are injectable (props /\n  hook arguments) so tests can substitute recording fakes (vi.fn()).\n- Add at least one interaction-order case: drive the user action, then assert\n  the recorded call order matches the diagram (e.g. expect(onSearch.mock.calls)\n  or expect(order).toEqual(['debounceStart', 'onSearch'])).",
+  "test_plan_schema": {
+    "type": "object",
+    "properties": {
+      "feature": {
+        "type": "string",
+        "description": "The feature name, verbatim from the spec"
+      },
+      "api": {
+        "type": "object",
+        "properties": {
+          "module": {
+            "type": "string",
+            "description": "Import path of the component/hook module under test, relative to the test file or an alias, e.g. '@/components/SearchBox' or './useDebounce'"
+          },
+          "imports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "description": "Exact import statements the test file needs beyond the RTL harness, e.g. \"import { SearchBox } from '@/components/SearchBox'\" or \"import { useDebounce } from '@/hooks/useDebounce'\". Do not import render/screen/userEvent/renderHook — the harness provides those."
+          },
+          "signatures": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Public component/hook/function signatures to implement, as TypeScript type lines, e.g. 'export function SearchBox(props: { onSearch: (q: string) => void; delayMs?: number }): JSX.Element' or 'export function useDebounce<T>(value: T, delayMs: number): T'"
+          }
+        },
+        "required": [
+          "module",
+          "signatures"
+        ],
+        "additionalProperties": false
+      },
+      "fixtures": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Valid camelCase JS identifier for the setup helper (a factory returning props, a mock, a store, or a wrapper)"
+            },
+            "body": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Executable statements for the helper body; the last must be a 'return'. Rendered as a function the test calls, e.g. 'return { onSearch: jest.fn() }'."
+            }
+          },
+          "required": [
+            "name",
+            "body"
+          ],
+          "additionalProperties": false
+        },
+        "default": []
+      },
+      "cases": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "scenario": {
+              "type": "string",
+              "description": "Name of the scenario this case comes from"
+            },
+            "testName": {
+              "type": "string",
+              "description": "Human-readable test title for `it(...)`, e.g. 'disables the button while loading'"
+            },
+            "given": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [],
+              "description": "Arrange statements — executable TypeScript, one statement per entry. Set up props/mocks/store/router and RENDER the component (e.g. 'const onSearch = vi.fn()', \"render(<SearchBox onSearch={onSearch} />)\"). For a hook, render it with 'const { result } = renderHook(() => useThing(...))'. Request a fixture by calling it here (e.g. 'const props = makeProps()')."
+            },
+            "when": {
+              "type": "string",
+              "description": "The SINGLE act, as an expression; its value is assigned to `result`. For a component this is a user interaction via userEvent (e.g. \"userEvent.type(screen.getByRole('textbox'), 'hello')\") — include 'await'. For a hook it is the call whose value you assert, wrapped in act if it mutates (e.g. 'act(() => result.current.increment())'). When the arrange step already rendered and the assertion needs no distinct act (pure render assertion), set this to 'None'."
+            },
+            "then": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Complete React Testing Library assertion STATEMENTS, each a full line including the expect(...) wrapper, e.g. \"expect(screen.getByRole('button')).toBeDisabled()\" or 'expect(onSearch).toHaveBeenCalledWith(\"hello\")' or 'expect(result.current).toBe(0)'. jest-dom matchers (toBeDisabled, toBeInTheDocument, ...) are available. Do NOT prefix with 'assert'; write the assertion exactly as it appears in the test body."
+            },
+            "fixtures": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [],
+              "description": "Names of setup helpers this test uses (each is emitted as a callable helper; invoke them inside 'given')"
+            },
+            "covers": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [],
+              "description": "Ids this test exercises: sequence-diagram message ids (e.g. 'M1') and/or rule/edge-case ids (e.g. 'rule_1', 'edge_1'); required when the feature has sequence diagrams, rules, or edge cases"
+            },
+            "isAsync": {
+              "type": "boolean",
+              "default": true,
+              "description": "True when the act or arrange steps need await (userEvent and most RTL flows are async — default true; set false only for a pure synchronous hook/render assertion)"
+            },
+            "edgeCase": {
+              "type": "boolean",
+              "default": false,
+              "description": "True when this case was derived beyond the literal scenarios (boundary, error path, empty/loading state)"
+            },
+            "notes": {
+              "type": "string",
+              "default": "",
+              "description": "One line of implementer-facing context, if useful"
+            }
+          },
+          "required": [
+            "scenario",
+            "testName",
+            "when",
+            "then"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "requiredIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [],
+        "description": "Rule and edge-case ids (e.g. 'rule_1', 'edge_1') that every sound plan MUST cover via some TestCase.covers entry"
+      }
+    },
+    "required": [
+      "feature",
+      "api",
+      "cases"
+    ],
+    "additionalProperties": false
+  },
+  "notes": [
+    "reactullm enforces coverage (validatePlan) and safety (AST gate) on ITS side after receiving this JSON. pyllum only needs to return a schema-valid TestPlan; honoring `covers` faithfully is what makes reactullm's build pass.",
+    "The given/when/then/fixture-body strings render VERBATIM into an executable test module. Emit NO import statements inside any string — reactullm's safety gate rejects them.",
+    "JSON keys stay camelCase (testName, isAsync, edgeCase, requiredIds) — reactullm's Zod schema expects them."
+  ]
+}

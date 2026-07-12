@@ -1,7 +1,7 @@
 ---
 name: bdd-build
 description: >-
-  Drive the BDD→TDD workflow with pyllm.bdd: generate a red pytest suite plus
+  Drive the BDD→TDD workflow with pyllym.bdd: generate a red pytest suite plus
   a build brief from a TOML spec, then implement code until the suite is green
   without editing the generated tests. Use when the user asks to "build from a
   spec", mentions a .toml spec, a BRIEF_*.md or *.plan.json file, wants to
@@ -19,7 +19,7 @@ Two phases with a mandatory human review gate between them.
    key; plan mode does not):
 
    ```bash
-   python -m pyllm.bdd <spec-path> --out tests/generated --model <model-id>
+   python -m pyllym.bdd <spec-path> --out tests/generated --model <model-id>
    ```
 
    `<spec-path>` is a `.toml` spec file or a directory of them. Mode is

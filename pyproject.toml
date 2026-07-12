@@ -3,13 +3,13 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "pyllm"
+name = "pyllym"
 version = "1.16.0"
 description = "One delightful, async-first Python framework for every major AI provider."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.13"
-authors = [{ name = "pyllm contributors" }]
+authors = [{ name = "pyllym contributors" }]
 keywords = [
     "llm", "ai", "openai", "anthropic", "gemini", "bedrock", "mistral",
     "ollama", "chatbot", "agents", "embeddings", "rag", "async",
@@ -57,12 +57,12 @@ Homepage = "https://github.com/PhotonEra-B-V/malayopython_reticulatus_llm"
 Source = "https://github.com/PhotonEra-B-V/malayopython_reticulatus_llm"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/pyllm"]
+packages = ["src/pyllym"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"src/pyllm/models.json" = "pyllm/models.json"
-"src/pyllm/aliases.json" = "pyllm/aliases.json"
-"src/pyllm/models_schema.json" = "pyllm/models_schema.json"
+"src/pyllym/models.json" = "pyllym/models.json"
+"src/pyllym/aliases.json" = "pyllym/aliases.json"
+"src/pyllym/models_schema.json" = "pyllym/models_schema.json"
 
 [tool.ruff]
 line-length = 100
@@ -79,7 +79,7 @@ ignore = ["B008", "RUF012", "SIM108", "SIM105", "RUF005", "UP047"]
 
 [tool.mypy]
 python_version = "3.13"
-packages = ["pyllm"]
+packages = ["pyllym"]
 mypy_path = "src"
 strict = false
 warn_unused_ignores = true

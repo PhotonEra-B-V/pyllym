@@ -5,16 +5,16 @@ from __future__ import annotations
 import pytest
 from aioresponses import CallbackResult
 
-import pyllm
-from pyllm.chunk import Chunk
-from pyllm.errors import (
+import pyllym
+from pyllym.chunk import Chunk
+from pyllym.errors import (
     ContextLengthExceededError,
     Error,
     OverloadedError,
     ServiceUnavailableError,
     error_for_status,
 )
-from pyllm.stream_accumulator import StreamAccumulator
+from pyllym.stream_accumulator import StreamAccumulator
 
 
 def test_error_mapping_gateway_and_context_length():
@@ -26,13 +26,13 @@ def test_error_mapping_gateway_and_context_length():
 
 @pytest.mark.asyncio
 async def test_run_until_done_on_empty_chat_raises_clear_error():
-    chat = pyllm.create_chat(model="gpt-4o")
+    chat = pyllym.create_chat(model="gpt-4o")
     with pytest.raises(Error, match="Nothing to send"):
         await chat.run_until_done()
 
 
 def test_calls_true_is_rejected_not_coerced_to_one():
-    chat = pyllm.create_chat(model="gpt-4o")
+    chat = pyllym.create_chat(model="gpt-4o")
     with pytest.raises(ValueError):
         chat.with_tool(None, calls=True)
     with pytest.raises(ValueError):
@@ -47,24 +47,24 @@ def test_pending_think_tag_flushed_at_end_of_stream():
 
 
 def test_with_context_keeps_registry_model_info():
-    chat = pyllm.create_chat(model="gpt-4o")
-    ctx = pyllm.context()
+    chat = pyllym.create_chat(model="gpt-4o")
+    ctx = pyllym.context()
     chat.with_context(ctx)
     assert chat.model.pricing.text_tokens.input is not None  # not a stub Info
 
 
 def test_context_has_animate_delegate():
-    assert hasattr(pyllm.Context, "animate")
+    assert hasattr(pyllym.Context, "animate")
 
 
 def test_dict_content_does_not_leak_text_into_attachments():
-    msg = pyllm.Message(role="user", content={"text": "hello"})
+    msg = pyllym.Message(role="user", content={"text": "hello"})
     assert msg.content == "hello"
 
 
 def test_config_typo_read_raises_attribute_error(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-    cfg = pyllm.Configuration()
+    cfg = pyllym.Configuration()
     with pytest.raises(AttributeError):
         _ = cfg.opnai_api_key
     assert cfg.openai_api_key is None  # registered option, unset -> None
@@ -72,13 +72,13 @@ def test_config_typo_read_raises_attribute_error(monkeypatch):
 
 def test_config_unset_provider_option_falls_back_to_env(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-from-env")
-    cfg = pyllm.Configuration()
+    cfg = pyllym.Configuration()
     assert cfg.openai_api_key == "sk-from-env"
 
 
 def test_config_code_value_wins_over_env(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-from-env")
-    cfg = pyllm.Configuration()
+    cfg = pyllym.Configuration()
     cfg.openai_api_key = "sk-from-code"
     assert cfg.openai_api_key == "sk-from-code"
     # un-setting (None or blank) restores the env fallback
@@ -91,7 +91,7 @@ def test_config_code_value_wins_over_env(monkeypatch):
 
 def test_config_blank_env_value_reads_as_none(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "   ")
-    cfg = pyllm.Configuration()
+    cfg = pyllym.Configuration()
     assert cfg.openai_api_key is None
 
 
@@ -102,7 +102,7 @@ async def test_bare_json_error_body_in_200_stream_raises(mock_http):
         body=b'{"error": {"type": "overloaded_error", "message": "Overloaded"}}',
         headers={"content-type": "application/json"},
     )
-    chat = pyllm.create_chat(model="gpt-4o")
+    chat = pyllym.create_chat(model="gpt-4o")
     with pytest.raises(OverloadedError):
         async for _ in chat.stream("hi"):
             pass
@@ -123,17 +123,17 @@ async def test_stream_early_break_cancels_producer(mock_http):
         return CallbackResult(body=sse, headers={"content-type": "text/event-stream"})
 
     mock_http.post("https://api.openai.com/v1/chat/completions", callback=responder, repeat=True)
-    chat = pyllm.create_chat(model="gpt-4o")
+    chat = pyllym.create_chat(model="gpt-4o")
     async for _chunk in chat.stream("hi"):
         break  # early exit must not raise and must not hang
 
 
 def test_fal_queue_base_honors_api_base_override():
-    pyllm.configure(lambda c: setattr(c, "fal_api_key", "k"))
-    from pyllm.protocols.fal import Fal
-    from pyllm.providers.fal import Fal as FalProvider
+    pyllym.configure(lambda c: setattr(c, "fal_api_key", "k"))
+    from pyllym.protocols.fal import Fal
+    from pyllym.providers.fal import Fal as FalProvider
 
-    cfg = pyllm.config().copy()
+    cfg = pyllym.config().copy()
     cfg.fal_api_base = "https://gateway.corp/fal"
     protocol = Fal(FalProvider(cfg))
     assert protocol._queue_base() == "https://gateway.corp/fal"
@@ -143,7 +143,7 @@ def test_fal_queue_base_honors_api_base_override():
 
 @pytest.mark.asyncio
 async def test_shared_client_reused_across_chats(mock_http):
-    from pyllm.connection import _CLIENT_CACHE
+    from pyllym.connection import _CLIENT_CACHE
 
     mock_http.post(
         "https://api.openai.com/v1/chat/completions",
@@ -156,12 +156,12 @@ async def test_shared_client_reused_across_chats(mock_http):
         },
         repeat=True,
     )
-    a = pyllm.create_chat(model="gpt-4o")
-    b = pyllm.create_chat(model="gpt-4o")
+    a = pyllym.create_chat(model="gpt-4o")
+    b = pyllym.create_chat(model="gpt-4o")
     await a.ask("x")
     await b.ask("y")
     assert a.provider.connection._client is b.provider.connection._client
-    await pyllm.aclose()
+    await pyllym.aclose()
     import asyncio
 
     assert asyncio.get_running_loop() not in _CLIENT_CACHE
@@ -169,7 +169,7 @@ async def test_shared_client_reused_across_chats(mock_http):
 
 @pytest.mark.asyncio
 async def test_media_async_blob_helpers_exist():
-    from pyllm import Image, Video
+    from pyllym import Image, Video
 
     img = Image(data="aGk=")  # base64 "hi"
     assert await img.ato_blob() == b"hi"
