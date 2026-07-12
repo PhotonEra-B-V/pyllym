@@ -4,21 +4,21 @@ import pytest
 
 celery = pytest.importorskip("celery")
 
-from pyllm.celery import create_tasks, run_async  # noqa: E402
+from pyllym.celery import create_tasks, run_async  # noqa: E402
 
 from .conftest import sent_requests  # noqa: E402
 
 
 @pytest.fixture
 def tasks():
-    app = celery.Celery("pyllm-tests")
+    app = celery.Celery("pyllym-tests")
     app.conf.task_always_eager = True
     app.conf.task_eager_propagates = True
     return create_tasks(app)
 
 
 def test_task_names_and_options():
-    app = celery.Celery("pyllm-tests")
+    app = celery.Celery("pyllym-tests")
     tasks = create_tasks(app, name_prefix="myapp.llm", queue="llm")
     assert tasks.ask.name == "myapp.llm.ask"
     assert tasks.embed.name == "myapp.llm.embed"

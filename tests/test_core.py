@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-import pyllm
-from pyllm import Message, Tool, utils
-from pyllm.content import Content
-from pyllm.errors import InvalidRoleError
+import pyllym
+from pyllym import Message, Tool, utils
+from pyllym.content import Content
+from pyllym.errors import InvalidRoleError
 
 
 def test_underscore():
@@ -28,17 +28,17 @@ def test_content_format_collapses_to_text():
 
 
 def test_models_registry_lookup():
-    m = pyllm.models.find("gpt-4o")
+    m = pyllym.models.find("gpt-4o")
     assert m.provider == "openai"
-    assert pyllm.models.find("claude-sonnet-4-6").provider == "anthropic"
-    assert len(pyllm.models.chat_models()) > 100
+    assert pyllym.models.find("claude-sonnet-4-6").provider == "anthropic"
+    assert len(pyllym.models.chat_models()) > 100
 
 
 def test_model_not_found():
-    from pyllm.errors import ModelNotFoundError
+    from pyllym.errors import ModelNotFoundError
 
     with pytest.raises(ModelNotFoundError):
-        pyllm.models.find("nonexistent-model-xyz")
+        pyllym.models.find("nonexistent-model-xyz")
 
 
 def test_tool_schema_inference():

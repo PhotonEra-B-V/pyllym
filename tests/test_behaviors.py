@@ -3,14 +3,14 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-import pyllm
-from pyllm import Agent, Message, Tool, utils
-from pyllm.chunk import Chunk
-from pyllm.cost import Cost
-from pyllm.model.info import Info
-from pyllm.stream_accumulator import StreamAccumulator
-from pyllm.tokens import Tokens
-from pyllm.tool_call import ToolCall
+import pyllym
+from pyllym import Agent, Message, Tool, utils
+from pyllym.chunk import Chunk
+from pyllym.cost import Cost
+from pyllym.model.info import Info
+from pyllym.stream_accumulator import StreamAccumulator
+from pyllym.tokens import Tokens
+from pyllym.tool_call import ToolCall
 
 from .conftest import sent_json
 
@@ -38,7 +38,7 @@ async def test_structured_output_parses_json_and_sends_schema(mock_http):
             "usage": {"prompt_tokens": 1, "completion_tokens": 1},
         },
     )
-    chat = pyllm.create_chat(model="gpt-4o").with_schema(Recipe)
+    chat = pyllym.create_chat(model="gpt-4o").with_schema(Recipe)
     msg = await chat.ask("recipe?")
     assert msg.content == {"title": "Toast", "steps": ["toast bread"]}
     assert '"json_schema"' in sent_json(mock_http)
@@ -142,7 +142,7 @@ def test_agent_applies_configuration():
 
 # --- render payloads (no network) ----------------------------------------------
 def test_render_openai_includes_media_parts():
-    chat = pyllm.create_chat(model="gpt-4o")
+    chat = pyllym.create_chat(model="gpt-4o")
     chat.add_user_message("look", with_="https://example.com/cat.png")
     payload = chat.render()
     content = payload["messages"][0]["content"]
@@ -150,7 +150,7 @@ def test_render_openai_includes_media_parts():
 
 
 def test_render_anthropic_shape():
-    chat = pyllm.create_chat(model="claude-sonnet-4-6")
+    chat = pyllym.create_chat(model="claude-sonnet-4-6")
     chat.add_user_message("hi")
     payload = chat.render()
     assert payload["model"] and payload["max_tokens"]
@@ -158,7 +158,7 @@ def test_render_anthropic_shape():
 
 
 def test_render_gemini_shape():
-    chat = pyllm.create_chat(model="gemini-2.5-flash")
+    chat = pyllym.create_chat(model="gemini-2.5-flash")
     chat.add_user_message("hi")
     payload = chat.render()
     assert "contents" in payload

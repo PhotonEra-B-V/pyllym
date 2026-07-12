@@ -18,17 +18,17 @@ Azure, and any OpenAI-compatible API — behind one consistent interface.
 > recommended for production use.
 
 ```python
-import pyllm
+import pyllym
 
-pyllm.configure(lambda c: setattr(c, "openai_api_key", "sk-..."))
+pyllym.configure(lambda c: setattr(c, "openai_api_key", "sk-..."))
 
-chat = pyllm.create_chat(model="gpt-5.4")
+chat = pyllym.create_chat(model="gpt-5.4")
 message = await chat.ask("What's the best way to learn Python?")
 print(message.content)
 ```
 
 > Every provider ships its own bloated client with different APIs, response
-> formats, and conventions. pyllm gives you **one** interface for all of them —
+> formats, and conventions. pyllym gives you **one** interface for all of them —
 > the same code whether you're using GPT, Claude, Gemini, or your local Ollama.
 
 ---
@@ -50,12 +50,19 @@ print(message.content)
 ## Installation
 
 ```bash
-pip install pyllm                # core
-pip install "pyllm[db]"          # + SQLAlchemy persistence
-pip install "pyllm[celery]"      # + Celery background tasks
-pip install "pyllm[mime]"        # + content-based MIME sniffing
-pip install "pyllm[dev]"         # + test/lint tooling
+pip install pyllym                # core
+pip install "pyllym[db]"          # + SQLAlchemy persistence
+pip install "pyllym[celery]"      # + Celery background tasks
+pip install "pyllym[mime]"        # + content-based MIME sniffing
+pip install "pyllym[sci]"         # + numerical stack for the data-analysis examples
+pip install "pyllym[dev]"         # + test/lint tooling
 ```
+
+The `sci` extra pulls in the scientific Python stack — **numpy**, **scipy**,
+**pandas**, **matplotlib**, **seaborn**, **scikit-learn**, and **sympy** — used
+only by the data-analysis examples (e.g. [`examples/stats.py`](examples/stats.py)).
+The core library depends on nothing beyond `aiohttp` and `pydantic`; the
+numerical packages are never imported by `pyllym` itself.
 
 > This repository is a source tree; install it editable with
 > `pip install -e ".[dev,db]"`.
@@ -63,9 +70,9 @@ pip install "pyllm[dev]"         # + test/lint tooling
 ## Configuration
 
 ```python
-import pyllm
+import pyllym
 
-pyllm.configure(lambda c: (
+pyllym.configure(lambda c: (
     setattr(c, "openai_api_key", "sk-..."),
     setattr(c, "anthropic_api_key", "sk-ant-..."),
     setattr(c, "gemini_api_key", "..."),
@@ -75,14 +82,14 @@ pyllm.configure(lambda c: (
 Any provider option that isn't set in code falls back to the environment
 variable of the same name in uppercase — `OPENAI_API_KEY`,
 `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OLLAMA_API_BASE`, and so on. Values
-set via `pyllm.configure` always take precedence, so exporting keys in your
+set via `pyllym.configure` always take precedence, so exporting keys in your
 shell is enough to get started (including for CLI entry points like
-`python -m pyllm.bdd`).
+`python -m pyllym.bdd`).
 
 Per-call overrides use a `Context`:
 
 ```python
-ctx = pyllm.context(lambda c: setattr(c, "request_timeout", 30))
+ctx = pyllym.context(lambda c: setattr(c, "request_timeout", 30))
 chat = ctx.create_chat(model="claude-sonnet-4-6")
 ```
 
@@ -91,7 +98,7 @@ chat = ctx.create_chat(model="claude-sonnet-4-6")
 ### Ask anything
 
 ```python
-chat = pyllm.create_chat(model="gpt-5.4")
+chat = pyllym.create_chat(model="gpt-5.4")
 await chat.ask("What's the capital of France?")
 ```
 
@@ -113,7 +120,7 @@ async for chunk in chat.stream("Write a haiku about Python"):
 ### Tools (function calling)
 
 ```python
-from pyllm import Tool
+from pyllym import Tool
 
 class Weather(Tool):
     description = "Look up the weather for a city"
@@ -121,9 +128,9 @@ class Weather(Tool):
     async def execute(self, *, city: str) -> str:
         return f"It's sunny in {city}"
 
-chat = pyllm.create_chat(model="gpt-5.4").with_tool(Weather)
+chat = pyllym.create_chat(model="gpt-5.4").with_tool(Weather)
 answer = await chat.ask("What's the weather in Paris?")
-# pyllm runs the agentic loop: model -> tool -> model -> final answer
+# pyllym runs the agentic loop: model -> tool -> model -> final answer
 ```
 
 Tools may be sync or async. Run them concurrently with
@@ -138,7 +145,7 @@ class Recipe(BaseModel):
     title: str
     ingredients: list[str]
 
-chat = pyllm.create_chat(model="gpt-5.4").with_schema(Recipe)
+chat = pyllym.create_chat(model="gpt-5.4").with_schema(Recipe)
 msg = await chat.ask("Give me a recipe for pancakes")
 msg.content  # -> a dict matching the schema
 ```
@@ -146,34 +153,34 @@ msg.content  # -> a dict matching the schema
 ### Thinking / reasoning
 
 ```python
-chat = pyllm.create_chat(model="claude-sonnet-4-6").with_thinking(effort="high")
+chat = pyllym.create_chat(model="claude-sonnet-4-6").with_thinking(effort="high")
 ```
 
 ### Embeddings, images, speech, transcription, moderation
 
 ```python
-emb   = await pyllm.embed("Hello world")                       # Embedding(vectors=...)
-image = await pyllm.paint("a red panda coding", model="gpt-image-1.5")
+emb   = await pyllym.embed("Hello world")                       # Embedding(vectors=...)
+image = await pyllym.paint("a red panda coding", model="gpt-image-1.5")
 image.save("panda.png")
-speech = await pyllm.speak("Hello there", model="gpt-4o-mini-tts")
+speech = await pyllym.speak("Hello there", model="gpt-4o-mini-tts")
 speech.save("hello.mp3")
-text  = await pyllm.transcribe("meeting.wav")                  # Transcription(text=...)
-mod   = await pyllm.moderate("some text")                      # Moderation(...)
+text  = await pyllym.transcribe("meeting.wav")                  # Transcription(text=...)
+mod   = await pyllym.moderate("some text")                      # Moderation(...)
 ```
 
 ### Image & video generation via fal.ai
 
-`pyllm.paint` reaches fal-hosted image models (FLUX.2, HunyuanImage, Qwen-Image);
-`pyllm.animate` is a video-generation capability (LTX, Wan, HunyuanVideo) that
+`pyllym.paint` reaches fal-hosted image models (FLUX.2, HunyuanImage, Qwen-Image);
+`pyllym.animate` is a video-generation capability (LTX, Wan, HunyuanVideo) that
 submits to fal's queue and polls until the render completes.
 
 ```python
-pyllm.configure(lambda c: setattr(c, "fal_api_key", "..."))
+pyllym.configure(lambda c: setattr(c, "fal_api_key", "..."))
 
-image = await pyllm.paint("a red panda", provider="fal", model="fal-ai/flux/dev")
+image = await pyllym.paint("a red panda", provider="fal", model="fal-ai/flux/dev")
 image.save("panda.png")
 
-video = await pyllm.animate("a timelapse sunrise over mountains",
+video = await pyllym.animate("a timelapse sunrise over mountains",
                             model="fal-ai/ltx-video-13b-distilled")  # provider="fal" default
 video.save("sunrise.mp4")
 ```
@@ -181,7 +188,7 @@ video.save("sunrise.mp4")
 ### Agents
 
 ```python
-from pyllm import Agent
+from pyllym import Agent
 
 class Researcher(Agent):
     chat_model = "claude-sonnet-4-6"
@@ -201,7 +208,7 @@ model factory:
 ```python
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from pyllm.persistence import create_models
+from pyllym.persistence import create_models
 
 class Base(DeclarativeBase): ...
 
@@ -211,20 +218,20 @@ Chat, Message, ToolCall = create_models(Base)   # bound to your Base
 record = Chat(model_id="gpt-5.4", provider="openai")
 session.add(record); await session.commit()
 
-chat = record.to_chat(session)        # a pyllm.Chat backed by the DB
+chat = record.to_chat(session)        # a pyllym.Chat backed by the DB
 await chat.ask("Hello!")             # user + assistant rows are persisted
 await session.commit()
 ```
 
 ## Background tasks (Celery)
 
-Optionally run pyllm operations on Celery workers. `create_tasks` registers
+Optionally run pyllym operations on Celery workers. `create_tasks` registers
 ready-made tasks (`ask`, `embed`, `paint`, `speak`, `transcribe`, `moderate`)
 on your app — broker-friendly JSON in, plain dicts out:
 
 ```python
 from celery import Celery
-from pyllm.celery import create_tasks
+from pyllym.celery import create_tasks
 
 app = Celery("worker", broker="redis://localhost:6379/0",
              backend="redis://localhost:6379/1")
@@ -238,7 +245,7 @@ tasks.paint.delay("a red panda coding", save_path="/tmp/panda.png")
 ```
 
 Workers are synchronous; each task drives the underlying coroutine with
-`pyllm.celery.run_async`, which also closes pyllm's HTTP pools before the
+`pyllym.celery.run_async`, which also closes pyllym's HTTP pools before the
 event loop shuts down. Use `run_async` directly in your own tasks for
 richer features (tools, agents, callbacks) that don't serialize through a
 broker:
@@ -246,21 +253,21 @@ broker:
 ```python
 @app.task
 def research(question: str) -> dict:
-    chat = pyllm.create_chat(model="gpt-5.4").with_tool(Weather)
+    chat = pyllym.create_chat(model="gpt-5.4").with_tool(Weather)
     return run_async(chat.ask(question)).to_dict()
 ```
 
 ## BDD test builder (pre-TDD scaffolding)
 
-`pyllm.bdd` turns a **TOML spec** into a *red* pytest suite plus an
+`pyllym.bdd` turns a **TOML spec** into a *red* pytest suite plus an
 implementation brief — a building instruction for a coding agent (or a human)
-to implement against. pyllm dogfoods itself: in request mode the planning step
+to implement against. pyllym dogfoods itself: in request mode the planning step
 is a structured-output call filling a `TestPlan` schema, and the actual test
 code is *always* rendered from deterministic templates, never written freeform
 by the model.
 
 ```python
-from pyllm.bdd import build
+from pyllym.bdd import build
 
 results = await build("specs/", "tests/generated", model="gpt-5.4")
 ```
@@ -270,7 +277,7 @@ On Mac it might make sense to have an alias for Python `alias python="python3"`.
 or from the shell:
 
 ```bash
-python -m pyllm.bdd specs/retry.toml --out tests/generated --model gpt-5.4
+python -m pyllym.bdd specs/retry.toml --out tests/generated --model gpt-5.4
 ```
 
 For each spec this writes `test_<slug>.py` (the failing suite),
@@ -361,7 +368,7 @@ No extra dependencies are required.
 > reviewing, testing, and validating anything it produces before relying on it.
 > The maintainers accept no liability for any outcomes resulting from its use.
 
-`pyllm.tdg` is a newer sibling of `pyllm.bdd` with the same TOML front-end,
+`pyllym.tdg` is a newer sibling of `pyllym.bdd` with the same TOML front-end,
 two-mode planning, template rendering, and AST safety gate — plus two additions:
 
 - **Dependency introspection** — it inspects the module under test for its real
@@ -373,16 +380,74 @@ two-mode planning, template rendering, and AST safety gate — plus two addition
   with a `_DONE.json` completion marker and a `latest.json` pointer, so a
   subsequent run skips specs that haven't changed and only regenerates what did.
 
-The interface mirrors `pyllm.bdd`:
+The interface mirrors `pyllym.bdd`:
 
 ```python
-from pyllm.tdg import build
+from pyllym.tdg import build
 
 results = await build("specs/", "tests/generated", model="gpt-5.4")
 ```
 
 ```bash
-python -m pyllm.tdg specs/ --out tests/generated --model gpt-5.4
+python -m pyllym.tdg specs/ --out tests/generated --model gpt-5.4
+```
+
+## reactuLLM bridge (request-mode planner backend)
+
+pyllym can serve as the **request-mode planner backend** for
+[reactuLLM-sdd](https://github.com/) — a sibling TypeScript framework that
+compiles a TOML spec into a red React Testing Library suite. In request mode
+reactuLLM needs a model to fill a typed `TestPlan` via structured output;
+instead of coupling the two over HTTP, they agree on a **shared JSON contract**
+(`reactullm-pyllum.contract.json`). pyllym reads that file, sends its
+`planner_instructions` as the system prompt, constrains a structured-output
+`Chat` to its `test_plan_schema`, and returns one `TestPlan` object with
+camelCase keys. Neither repo imports the other; the contract is the only
+interface.
+
+The whole connection is gated by one env var, `REACTULLM_PYLLUM_CONTRACT` (an
+absolute path to the contract) — **set** turns the bridge on, **unset** leaves
+it off with no error. `REACTULLM_PYLLUM_MODEL` picks the model (defaults to a
+sensible pyllym model); provider keys follow pyllym's usual config precedence.
+
+```python
+from pyllym.reactullm_bridge import plan_from_spec, is_enabled
+
+if is_enabled():
+    plan = await plan_from_spec(spec_prompt)  # dict honoring test_plan_schema
+```
+
+```bash
+# fills the TestPlan from a spec prompt; honors REACTULLM_PYLLUM_CONTRACT/_MODEL
+python -m pyllym.reactullm_bridge spec.prompt.txt --out plan.json
+```
+
+### Cross-stack handoff (bidirectional)
+
+Full-stack generation also needs a **handoff contract** that flows both ways:
+sometimes the FastAPI backend is generated first and React matches it
+(*backend-first*), sometimes React is generated first and the backend matches it
+(*frontend-first*). `pyllym.reactullm_handoff` mirrors reactuLLM's
+`handoff.ts` / `handoffStore.ts` — same file names, `runId` format
+(`YYYYMMDDThhmmssZ`), and latest-wins de-collision — through a directory shared
+by both repos, located by `REACTULLM_PYLLUM_HANDOFF_DIR` (unset = off).
+
+```python
+from pyllym.reactullm_handoff import commit_handoff, latest_handoff, is_newer_than_implemented
+
+# producing (backend-first): write the API surface reactuLLM must conform to
+commit_handoff(dir, {"version": 1, "direction": "backend_first",
+                     "producer": "pyllum", "consumer": "reactullm",
+                     "feature": "Job search", "apiSurface": {...}})
+
+# consuming (frontend-first): implement only a strictly-newer handoff
+if is_newer_than_implemented(dir, last_run_id):
+    surface = latest_handoff(dir)["apiSurface"]
+```
+
+```bash
+python -m pyllym.reactullm_handoff produce handoff.json   # commit a backend-first handoff
+python -m pyllym.reactullm_handoff consume --implemented 20260713T142233Z
 ```
 
 ## Supported providers
@@ -401,6 +466,35 @@ python -m pyllm.tdg specs/ --out tests/generated --model gpt-5.4
 | AWS Bedrock (Converse) | ✅ non-streaming (SigV4 signed); streaming WIP |
 | Vertex AI (Gemini) | ✅ with a supplied access token; OAuth minting WIP |
 
+### GPU / CUDA acceleration
+
+`pyllym` is a pure async **HTTP client** — it sends requests to provider APIs
+and never loads or runs a model in-process, so it has no `torch`/CUDA
+dependency and no in-library GPU code path. **GPU acceleration is a property of
+the server you point pyllym at, not of pyllym.**
+
+For the local providers (**Ollama**, **vLLM**, **GPUStack**), run the server on
+a CUDA-capable host and it will use the GPU automatically; pyllym just talks to
+its HTTP endpoint:
+
+```python
+import pyllym
+
+# Point at a local, GPU-backed server (CUDA handled entirely by the server).
+pyllym.configure(lambda c: setattr(c, "ollama_api_base", "http://localhost:11434"))
+chat = pyllym.create_chat(model="llama3.1:70b")
+```
+
+- **Ollama** — uses an available NVIDIA GPU out of the box (see its CUDA docs);
+  set `OLLAMA_API_BASE` and pyllym connects to it.
+- **vLLM** — start `vllm serve <model>` on a CUDA host (tune `--tensor-parallel-size`,
+  `--gpu-memory-utilization` there); point `VLLM_API_BASE` at it.
+- **GPUStack** — manages GPU workers itself; pyllym targets its OpenAI-compatible
+  endpoint via `GPUSTACK_API_BASE`.
+
+For hosted providers (OpenAI, Anthropic, Gemini, …) the GPUs live in the
+provider's infrastructure and are not something pyllym configures.
+
 ## Design
 
 - **Async/await everywhere** for I/O. `await chat.ask(...)` and
@@ -408,7 +502,7 @@ python -m pyllm.tdg specs/ --out tests/generated --model gpt-5.4
 - **Provider → Protocol → Connection** architecture: a provider knows *where*
   and *who*; a protocol knows the wire format; the connection is `aiohttp`.
 - **`aiohttp`** for HTTP, with connection pools shared across chats per event
-  loop; call `await pyllm.aclose()` once at application shutdown.
+  loop; call `await pyllym.aclose()` once at application shutdown.
 - **SQLAlchemy** for optional persistence.
 - Fully type-annotated, `ruff`/`mypy`-friendly, Python 3.13+.
 - **Planned:** OpenAI's *Responses* protocol, Bedrock event-stream decoding,

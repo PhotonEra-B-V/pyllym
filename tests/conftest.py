@@ -9,7 +9,7 @@ import pytest
 from aioresponses import aioresponses
 from aioresponses import core as aioresponses_core
 
-import pyllm
+import pyllym
 
 from .seed_fixtures import DATA_DIR, seed_all
 
@@ -74,14 +74,14 @@ _KEYS = {
 def _isolate_provider_env(monkeypatch):
     """Strip real provider env vars (OPENAI_API_KEY, ...) so the env-var
     fallback can't leak a developer's credentials into tests."""
-    for key in pyllm.Configuration._provider_keys:
+    for key in pyllym.Configuration._provider_keys:
         monkeypatch.delenv(key.upper(), raising=False)
 
 
 @pytest.fixture(autouse=True)
 def _configure_keys():
     """Give every provider dummy credentials so construction succeeds."""
-    cfg = pyllm.config()
+    cfg = pyllym.config()
     for key, value in _KEYS.items():
         setattr(cfg, key, value)
     yield
@@ -91,7 +91,7 @@ def _configure_keys():
 async def _close_shared_sessions():
     """Close the per-loop shared aiohttp sessions before the test loop dies."""
     yield
-    await pyllm.aclose()
+    await pyllym.aclose()
 
 
 @pytest.fixture(scope="session", autouse=True)

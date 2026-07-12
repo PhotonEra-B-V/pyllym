@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from pyllm.tdg import build
-from pyllm.tdg.builder import PlanValidationError
-from pyllm.tdg.deps import check_dependencies, inspect_dependencies
+from pyllym.tdg import build
+from pyllym.tdg.builder import PlanValidationError
+from pyllym.tdg.deps import check_dependencies, inspect_dependencies
 
 
 def _write_module(tmp_path: Path, name: str, body: str) -> None:

@@ -4,7 +4,7 @@ Guidance for Claude Code when working in this repository.
 
 ## Project Overview
 
-**pyllm** is one delightful, async-first framework for every major AI provider
+**pyllym** is one delightful, async-first framework for every major AI provider
 (OpenAI, Anthropic, Google Gemini, AWS Bedrock, DeepSeek, Mistral, Ollama,
 OpenRouter, Perplexity, VertexAI, xAI, GPUStack, Azure, Qwen, Zhipu GLM,
 Moonshot, Doubao, ERNIE, MiniMax, NVIDIA, Cerebras, Hugging Face, Databricks,
@@ -15,12 +15,12 @@ calling), structured output, embeddings, image generation, video generation,
 speech, transcription, moderation, and an optional SQLAlchemy persistence
 layer.
 
-The Python package lives under `src/pyllm/`. A read-only reference source may
+The Python package lives under `src/pyllym/`. A read-only reference source may
 exist under `llm_ignore/` (git-ignored — never ship or import from it).
 
 | Item | Value |
 |------|-------|
-| Package | `pyllm` (import root) |
+| Package | `pyllym` (import root) |
 | Language | Python 3.13+ |
 | HTTP | `aiohttp` (async) |
 | Validation / value objects | `dataclasses` + `pydantic` (where schema-shaped) |
@@ -31,7 +31,7 @@ exist under `llm_ignore/` (git-ignored — never ship or import from it).
 ## Layout
 
 ```
-src/pyllm/                 # the package
+src/pyllym/                 # the package
   __init__.py              # façade: chat(), embed(), paint(), configure(), config, models
   configuration.py
   errors.py
@@ -82,7 +82,7 @@ llm_ignore/                 # read-only reference source, if present (git-ignore
   (decoupled from any spec type — it takes `scenario_names`, `message_ids`,
   `required_ids` sets) fails the build mechanically on uncovered
   scenarios/messages/ids or unknown claimed ids. This is the watertight
-  guarantee. CLI: `python -m pyllm.bdd specs/ --out tests/generated`.
+  guarantee. CLI: `python -m pyllym.bdd specs/ --out tests/generated`.
   Generated tests carry the `bdd_pending` marker and are treated as the
   read-only specification during implementation.
 - **Security model.** A spec's `given`/`when`/`then` and fixture bodies are
@@ -103,7 +103,7 @@ llm_ignore/                 # read-only reference source, if present (git-ignore
 
 Adding an OpenAI-compatible provider is a ~30-line file under `providers/`
 (set `api_base`, `headers`, config options, and `assumes_models_exist`), then
-register it in `pyllm/__init__.py`.
+register it in `pyllym/__init__.py`.
 
 ## Commands
 
@@ -122,9 +122,9 @@ pytest
 
 - `from __future__ import annotations` at the top of every module.
 - PEP 604 unions, builtin generics (`list[str]`, `dict[str, Any]`).
-- Public façade functions live in `pyllm/__init__.py` and delegate to classes.
-- Global config is a module singleton: `pyllm.config` / `pyllm.configure()`.
+- Public façade functions live in `pyllym/__init__.py` and delegate to classes.
+- Global config is a module singleton: `pyllym.config` / `pyllym.configure()`.
   Unset provider options fall back to the uppercase env var of the same name
   (`openai_api_key` → `OPENAI_API_KEY`); values set in code win.
 - The model registry data file `models.json` is generated data; prefer
-  `pyllm.models.refresh()` over hand-editing it.
+  `pyllym.models.refresh()` over hand-editing it.

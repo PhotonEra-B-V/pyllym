@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from pyllm.tdg import build, read_latest
-from pyllm.tdg.runs import DONE_MARKER, LATEST_POINTER, spec_hash
+from pyllym.tdg import build, read_latest
+from pyllym.tdg.runs import DONE_MARKER, LATEST_POINTER, spec_hash
 
 SPEC = """
 [meta]

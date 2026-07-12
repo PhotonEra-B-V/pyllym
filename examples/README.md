@@ -1,6 +1,6 @@
 # examples
 
-Small, runnable scripts for poking at `pyllm` from the terminal against a
+Small, runnable scripts for poking at `pyllym` from the terminal against a
 **local Gemma 4 model served by Ollama**.
 
 ## Prerequisites
@@ -10,7 +10,7 @@ Small, runnable scripts for poking at `pyllm` from the terminal against a
   ollama pull gemma4          # or gemma4:31b
   ollama serve                # usually already running
   ```
-- `pyllm` importable. From the repo root, either install it editable:
+- `pyllym` importable. From the repo root, either install it editable:
   ```bash
   pip install -e ".[dev]"
   ```

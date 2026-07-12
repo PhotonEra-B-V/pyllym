@@ -1,7 +1,7 @@
 """Let a *local* model do numeric/statistical analysis via tools.
 
 A general chat model is bad at arithmetic and worse at statistics — it will
-happily hallucinate a standard deviation. The fix is the same one pyllm uses
+happily hallucinate a standard deviation. The fix is the same one pyllym uses
 everywhere: hand the model *tools* and run the model -> tool -> model loop, so
 the numbers come from numpy and the stdlib ``statistics`` module, not the
 model's guesses.
@@ -40,7 +40,7 @@ from typing import Any
 import _bootstrap as boot
 import numpy as np
 
-from pyllm import Tool
+from pyllym import Tool
 
 # Where the code tool writes any plots the model produces.
 _PLOT_DIR = Path(__file__).resolve().parent / "plots"
@@ -100,7 +100,7 @@ def _sci_namespace() -> tuple[dict[str, Any], list[str]]:
     return ns, labels
 
 
-# pyllm infers tool parameters from ``execute``'s signature by *name* only, so
+# pyllym infers tool parameters from ``execute``'s signature by *name* only, so
 # annotations like ``list[float]`` would still advertise as "string" to the
 # model. We set ``_params_schema`` explicitly (via the helpers below) so the
 # model sends real JSON arrays; ``_nums`` casts them to floats for numpy.
@@ -126,7 +126,7 @@ def _num_array(desc: str) -> dict[str, Any]:
 
 
 def _schema(required: dict[str, Any], optional: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Build an explicit params schema. Needed because pyllm infers types by
+    """Build an explicit params schema. Needed because pyllym infers types by
     name only, so ``list[float]`` params would otherwise advertise as strings."""
     properties = {**required, **(optional or {})}
     return {"type": "object", "properties": properties, "required": list(required)}

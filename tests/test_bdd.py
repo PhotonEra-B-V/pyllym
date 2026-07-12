@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from pyllm.bdd import (
+from pyllym.bdd import (
     ApiSurface,
     FixtureDef,
     PlanSafetyError,
