@@ -1,0 +1,92 @@
+# A pyllym toolset: library callables the model may invoke, by dotted path.
+# Load with `pyllym.load_toolset("examples/analysis_tools.toml")` and pass the
+# result to `chat.with_tools(*tools)`.
+#
+# SECURITY: only the exact paths listed here are importable and callable — there
+# is no wildcard/module expansion. The listed callables run in-process, so treat
+# this file like a list of imports you are choosing to run: review it as such.
+#
+# `numpy` requires the opt-in scientific extra: `pip install -e ".[sci]"`.
+# The `statistics` entries are stdlib and need no extra.
+
+[[tools]]
+path = "statistics.mean"
+description = "Arithmetic mean of a list of numbers."
+[tools.params.data]
+type = "array"
+items = "number"
+description = "The numbers to average."
+
+[[tools]]
+path = "statistics.median"
+description = "Median (middle value) of a list of numbers."
+[tools.params.data]
+type = "array"
+items = "number"
+description = "The numbers."
+
+[[tools]]
+path = "numpy.std"
+name = "std_dev"
+description = "Population standard deviation of a list of numbers."
+[tools.params.a]
+type = "array"
+items = "number"
+description = "The numbers."
+
+[[tools]]
+path = "numpy.corrcoef"
+name = "correlation_matrix"
+description = "Pearson correlation matrix of one or more equal-length number series."
+[tools.params.x]
+type = "array"
+items = "number"
+description = "First series (and, if 2-D, all series)."
+
+# --- scikit-learn: functional metrics (callable by dotted path; no object needed).
+# `sci` extra ships scikit-learn. Model-fitting objects (LinearRegression().fit)
+# are methods on an instance, so the toolset uses the *functional* API here.
+
+[[tools]]
+path = "sklearn.metrics.r2_score"
+name = "r2_score"
+description = "Coefficient of determination R^2 between true and predicted values."
+[tools.params.y_true]
+type = "array"
+items = "number"
+description = "Ground-truth values."
+[tools.params.y_pred]
+type = "array"
+items = "number"
+description = "Predicted values."
+
+[[tools]]
+path = "sklearn.metrics.mean_squared_error"
+name = "mean_squared_error"
+description = "Mean squared error between true and predicted values."
+[tools.params.y_true]
+type = "array"
+items = "number"
+description = "Ground-truth values."
+[tools.params.y_pred]
+type = "array"
+items = "number"
+description = "Predicted values."
+
+# --- statsmodels: a functional descriptive-stats callable.
+# Requires the `sci` extra (statsmodels>=0.14). If statsmodels is not installed,
+# loading this entry fails with an actionable "pip install statsmodels" message.
+
+[[tools]]
+path = "statsmodels.robust.mad"
+name = "median_abs_deviation"
+description = "Median absolute deviation (a robust spread measure) of a number series."
+[tools.params.a]
+type = "array"
+items = "number"
+description = "The numbers."
+
+# Gradient-boosting (xgboost / lightgbm) predict is a method on a *trained*
+# model object, so it isn't a bare dotted-path callable — wrap your loaded
+# model's `predict` in a tiny module-level function and point a [[tools]] entry
+# at that (`mypkg.predict_churn`). The toolset then exposes it like any other.

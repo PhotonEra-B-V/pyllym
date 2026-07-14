@@ -133,7 +133,7 @@ async def plan_from_spec(
     spec_prompt: str,
     *,
     model: str | None = None,
-    contract_path: str | None = None,  # noqa: A002 — mirrors public kwarg name
+    contract_path: str | None = None,
     chat: Chat | None = None,
 ) -> dict[str, Any]:
     """Fill reactllm's ``TestPlan`` for one spec prompt via structured output.
@@ -155,11 +155,7 @@ async def plan_from_spec(
         raise ValueError("reactllm contract is missing 'planner_instructions'")
 
     chosen_model = model or default_model()
-    chat = (
-        (chat or Chat(model=chosen_model))
-        .with_instructions(instructions)
-        .with_schema(target)
-    )
+    chat = (chat or Chat(model=chosen_model)).with_instructions(instructions).with_schema(target)
     message = await chat.ask(spec_prompt)
     if not isinstance(message.content, dict):
         raise ValueError(

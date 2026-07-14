@@ -46,12 +46,20 @@ from .image import Image
 from .message import Message, Role
 from .moderation import Moderation
 from .provider import Provider
+from .reactullm_runtime import (
+    LLMError,
+    LLMRequest,
+    LLMResponse,
+    TaskConfig,
+    TaskRegistry,
+)
 from .search_results import SearchResults
 from .speech import Speech
 from .thinking import Thinking
 from .tokens import Tokens
 from .tool import Parameter, Tool
 from .tool_call import ToolCall
+from .toolset import MissingToolPackageError, load_toolset, tool_from_path
 from .transcription import Transcription
 from .uploaded_file import UploadedFile
 from .video import Video
@@ -222,7 +230,11 @@ __all__ = [
     "Image",
     "InvalidRoleError",
     "InvalidToolChoiceError",
+    "LLMError",
+    "LLMRequest",
+    "LLMResponse",
     "Message",
+    "MissingToolPackageError",
     "ModelNotFoundError",
     "Moderation",
     "OverloadedError",
@@ -236,6 +248,8 @@ __all__ = [
     "ServerError",
     "ServiceUnavailableError",
     "Speech",
+    "TaskConfig",
+    "TaskRegistry",
     "Thinking",
     "Tokens",
     "Tool",
@@ -255,10 +269,12 @@ __all__ = [
     "download",
     "embed",
     "list_providers",
+    "load_toolset",
     "models",
     "moderate",
     "paint",
     "speak",
+    "tool_from_path",
     "transcribe",
     "upload",
 ]

@@ -473,6 +473,13 @@ and never loads or runs a model in-process, so it has no `torch`/CUDA
 dependency and no in-library GPU code path. **GPU acceleration is a property of
 the server you point pyllym at, not of pyllym.**
 
+Numeric work — statistics, fitting, plotting — belongs on *your* side of that
+line: expose the library functions you trust as **tools** and let the model call
+them through pyllym's function-calling, so the numbers come from `numpy`/`scipy`,
+not the model's guesses. See [Config-driven tools](#config-driven-tools-math--stats--plotting)
+below; those libraries stay an opt-in extra, so the core install remains
+dependency-light.
+
 For the local providers (**Ollama**, **vLLM**, **GPUStack**), run the server on
 a CUDA-capable host and it will use the GPU automatically; pyllym just talks to
 its HTTP endpoint:
@@ -494,6 +501,73 @@ chat = pyllym.create_chat(model="llama3.1:70b")
 
 For hosted providers (OpenAI, Anthropic, Gemini, …) the GPUs live in the
 provider's infrastructure and are not something pyllym configures.
+
+### Config-driven tools (math / stats / plotting)
+
+A chat model is unreliable at arithmetic and worse at statistics. Rather than
+hand-write a `Tool` subclass per function, declare the library callables the
+model may use in a **TOML toolset** and pyllym generates one tool each —
+introspecting the signature so `list[float]` params advertise as JSON arrays:
+
+```toml
+# analysis_tools.toml
+[[tools]]
+path = "statistics.mean"
+description = "Arithmetic mean of a list of numbers."
+[tools.params.data]
+type = "array"
+items = "number"
+description = "The numbers to average."
+
+[[tools]]
+path = "numpy.corrcoef"
+name = "correlation_matrix"
+description = "Pearson correlation of one or more equal-length number series."
+```
+
+```python
+import pyllym
+
+tools = pyllym.load_toolset("analysis_tools.toml")
+chat = pyllym.create_chat(model="llama3.1").with_tools(*tools)
+answer = await chat.ask(
+    "Given hours [1,2,3,4] and scores [52,55,61,60], are they correlated? "
+    "Use the tools for every number."
+)
+```
+
+The model then computes on your data (feed a stats result straight into a
+plotting callable to produce a chart) with real library code, while pyllym stays
+a pure HTTP client. **Security — explicit allowlist only:** just the exact
+dotted paths in the file are importable and callable; there is no wildcard or
+module expansion, and no model-authored-code path. Those callables run
+**in-process**, so treat a toolset file like a list of imports you are choosing
+to run and review it the same way. Heavy libraries (`numpy`, `matplotlib`, …)
+are imported lazily, only when a toolset names them, and live behind the opt-in
+`sci` extra (`pip install -e ".[sci]"`) — which bundles `numpy`, `scipy`,
+`pandas`, `scikit-learn`, `statsmodels`, `xgboost`, `lightgbm`, `sympy`, and the
+plotting stack. Any of these (and any other installed library) is reachable by
+dotted path: `sklearn.metrics.r2_score`, `statsmodels.robust.mad`, etc. Model
+objects whose method you want (`xgboost`/`lightgbm` `.predict`, `sklearn`
+estimators) aren't bare callables — wrap your trained model's method in a
+module-level function and point a `[[tools]]` entry at that.
+
+A toolset can freely mix always-present and opt-in libraries: an entry whose
+top-level package isn't installed is **skipped with a warning** (not a crash) by
+default, so the rest of the file still loads. Pass
+`load_toolset(path, skip_missing=False)` to require every named package, and
+catch `pyllym.MissingToolPackageError` to detect the skipped ones.
+
+**Optional libraries you already have — e.g. PyTorch.** pyllym never depends on
+`torch`, but a toolset can name torch callables (`torch.mean`, or your own local
+model's `predict`) by dotted path: if torch is installed the client imports and
+calls it; if it isn't, the toolset fails with an actionable *"package 'torch' is
+not installed — pip install torch"* rather than a crash. So torch is *usable
+when present and a clean no-op when absent* — the client talks to whatever the
+user has installed, and pyllym itself stays a pure HTTP client with no torch/CUDA
+code path. See
+[`examples/analysis_tools.toml`](examples/analysis_tools.toml) and
+[`examples/stats.py`](examples/stats.py).
 
 ## Design
 

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "version": 1,
+  "title": "reactullm-sdd runtime LLM contract",
+  "description": "Language-neutral runtime contract between a shipped reactullm-sdd React frontend and pyllum (Python async LLM framework). This is the RUNTIME twin of reactullm-pyllum.contract.json (which governs build-time test planning): it governs LIVE calls made by the app's end users. The frontend builds an LLMRequest and POSTs it; pyllum validates it against `request_schema`, routes on `task`, sets the system prompt to `instructions` (or the task default), runs ONE pyllum turn constrained to `schema` when present, and replies with a `response_schema`-valid LLMResponse. Wire keys are camelCase. Neither repo imports the other. GENERATED from src/runtime.ts by `npm run gen:runtime` on the reactullm side — do not hand-edit; regenerate and bump `version`.",
+  "seam": {
+    "role": "reactullm's runtime client: build LLMRequest, POST, consume LLMResponse",
+    "operations": {
+      "with_instructions": "set the system prompt to `instructions`, or the task's server-side default when empty (fluent)",
+      "with_schema": "when `schema` is non-null, constrain the response to it (fluent)",
+      "ask": "run ONE turn on `input`; return `data` (structured) or `text` (free-form)"
+    },
+    "invariant": "On ok=true exactly one of data/text is non-null, chosen by whether the request carried a schema. On ok=false both are null and error is set."
+  },
+  "request_schema": {
+    "type": "object",
+    "properties": {
+      "task": {
+        "type": "string",
+        "description": "Stable id the server routes/authorizes/prompts on, e.g. 'summarize_job'. Not free-form prose; both sides agree on it."
+      },
+      "input": {
+        "type": "string",
+        "description": "The user turn / content to act on. Passed to the turn's ask(...)."
+      },
+      "instructions": {
+        "type": "string",
+        "default": "",
+        "description": "System prompt. Empty -> the server supplies the default system prompt registered for this task."
+      },
+      "schema": {
+        "type": ["object", "null"],
+        "default": null,
+        "description": "A JSON Schema object, or null. Non-null -> structured-output turn; response `data` must honor it. Null -> free-form; response `text` carries the answer."
+      },
+      "variables": {
+        "type": "object",
+        "default": {},
+        "description": "Named values interpolated into the task's prompt template. Travels from the browser -> untrusted, MUST NOT carry secrets; the server allow-lists which keys it honors per task."
+      }
+    },
+    "required": ["task", "input"],
+    "additionalProperties": false
+  },
+  "response_schema": {
+    "type": "object",
+    "properties": {
+      "task": {
+        "type": "string",
+        "description": "Echo of the request `task`, so out-of-order replies are matchable."
+      },
+      "ok": {
+        "type": "boolean",
+        "description": "true -> success payload (data or text) present; false -> error present."
+      },
+      "data": {
+        "type": ["object", "null"],
+        "default": null,
+        "description": "Structured result honoring the request `schema`. Non-null only when the request had a schema AND ok=true."
+      },
+      "text": {
+        "type": ["string", "null"],
+        "default": null,
+        "description": "Free-form answer. Non-null only when the request had NO schema AND ok=true."
+      },
+      "error": {
+        "type": ["object", "null"],
+        "default": null,
+        "description": "Populated iff ok=false.",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "schema_violation",
+              "unknown_task",
+              "rate_limited",
+              "provider_error",
+              "invalid_request",
+              "internal"
+            ],
+            "description": "Machine-routable failure class."
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable detail. Never leaks stack traces, keys, or secrets."
+          }
+        },
+        "required": ["code", "message"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["task", "ok"],
+    "additionalProperties": false
+  },
+  "notes": [
+    "`task` is the authorization key: the browser MUST NOT choose the model or inject arbitrary system prompts the server did not register. Unknown task -> error.code=unknown_task.",
+    "`variables` is untrusted browser input; the server honors only an allow-list of keys per task and never echoes secrets.",
+    "Wire keys stay camelCase (the request 'schema' key is reserved in some frameworks; alias it rather than renaming the shape)."
+  ]
+}
