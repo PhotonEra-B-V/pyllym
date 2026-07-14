@@ -1,0 +1,46 @@
+# Dependabot scheduled version updates.
+# Security updates are already enabled via repo settings; this adds routine
+# dependency-bump PRs on a schedule. Docs: https://docs.github.com/code-security/dependabot
+version: 2
+updates:
+  # Python dependencies declared in pyproject.toml (core deps + extras: dev, sci,
+  # db, celery, mime). Grouped so related bumps land in one PR instead of many.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+    groups:
+      # One PR for all non-major (minor + patch) updates — low-risk, easy to review.
+      python-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      # Dev tooling (linters, type checker, test stack) grouped together, majors included.
+      dev-tooling:
+        patterns:
+          - "ruff"
+          - "mypy"
+          - "pytest*"
+          - "aioresponses"
+
+  # GitHub Actions workflows. No workflows exist yet, so this is a no-op until
+  # one is added under .github/workflows/ — then it keeps action pins current.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "ci"
