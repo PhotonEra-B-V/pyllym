@@ -233,12 +233,13 @@ def _schema_for(func: Any, overrides: dict[str, Any]) -> dict[str, Any]:
     """
     properties: dict[str, Any] = {}
     required: list[str] = []
+    sig: inspect.Signature | None = None
+    hints: dict[str, Any] = {}
     try:
         sig = inspect.signature(func)
         hints = _safe_hints(func)
     except (ValueError, TypeError):
         sig = None
-        hints = {}
 
     if sig is not None:
         for pname, param in sig.parameters.items():
