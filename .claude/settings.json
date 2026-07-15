@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~*)",
+      "Bash(rm -rf .*)",
+      "Bash(sudo rm*)",
+      "Bash(mkfs*)",
+      "Bash(dd*of=/dev/*)",
+      "Bash(shutdown*)",
+      "Bash(reboot*)",
+      "Bash(halt*)",
+      "Bash(poweroff*)",
+      "Bash(shred*)",
+      "Bash(git push*--force*)",
+      "Bash(git push*-f*)",
+      "Bash(git reset --hard*origin/*)",
+      "Bash(git clean -*f*d*)",
+      "Bash(chmod -R 777 /*)",
+      "Bash(curl*|*sh*)",
+      "Bash(curl*|*bash*)",
+      "Bash(wget*|*sh*)",
+      "Bash(wget*|*bash*)",
+      "Bash(history -c*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*secret*)",
+      "Read(./llm_ignore/**)"
+    ],
+    "ask": [
+      "Bash(rm:*)",
+      "Bash(rmdir:*)",
+      "Bash(mv:*)",
+      "Bash(truncate:*)",
+      "Bash(:>*)",
+      "Bash(find:* -delete)",
+      "Bash(find:* -exec rm *)",
+      "Bash(xargs rm:*)",
+      "Bash(chmod -R:*)",
+      "Bash(chown -R:*)",
+      "Bash(git rm:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean:*)",
+      "Bash(git checkout -- :*)",
+      "Bash(git restore:*)",
+      "Bash(git branch -D:*)",
+      "Bash(git branch -d:*)",
+      "Bash(git stash drop:*)",
+      "Bash(git stash clear:*)",
+      "Bash(cargo clean:*)"
+    ],
+    "allow": [
+      "Bash(.venv/bin/ruff check*)",
+      "Bash(.venv/bin/ruff format*)",
+      "Bash(.venv/bin/mypy*)",
+      "Bash(.venv/bin/pytest*)",
+      "Bash(.venv/bin/python*)",
+      "Bash(pytest*)",
+      "Bash(ruff check*)",
+      "Bash(ruff format*)",
+      "Bash(mypy src*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git fetch*)",
+      "Bash(git add*)",
+      "Bash(git branch*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/block-dangerous-commands.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -99,7 +99,9 @@ def create_tasks(app: Celery, *, name_prefix: str = "pyllym", **task_options: An
     ) -> dict[str, Any]:
         import pyllym
 
-        result = run_async(pyllym.embed(text, model=model, provider=provider, dimensions=dimensions))
+        result = run_async(
+            pyllym.embed(text, model=model, provider=provider, dimensions=dimensions)
+        )
         return {
             "vectors": result.vectors,
             "model": result.model,
