@@ -49,13 +49,19 @@ print(message.content)
 
 ## Installation
 
+> [!IMPORTANT]
+> pyllym is currently published as a **pre-release** (alpha). `pip` skips
+> pre-releases by default, so you must pass `--pre`:
+> `pip install --pre pyllym`. A plain `pip install pyllym` will not find the
+> alpha until a stable release exists.
+
 ```bash
-pip install pyllym                # core
-pip install "pyllym[db]"          # + SQLAlchemy persistence
-pip install "pyllym[celery]"      # + Celery background tasks
-pip install "pyllym[mime]"        # + content-based MIME sniffing
-pip install "pyllym[sci]"         # + numerical stack for the data-analysis examples
-pip install "pyllym[dev]"         # + test/lint tooling
+pip install --pre pyllym          # core
+pip install --pre "pyllym[db]"    # + SQLAlchemy persistence
+pip install --pre "pyllym[celery]" # + Celery background tasks
+pip install --pre "pyllym[mime]"  # + content-based MIME sniffing
+pip install --pre "pyllym[sci]"   # + numerical stack for the data-analysis examples
+pip install --pre "pyllym[dev]"   # + test/lint tooling
 ```
 
 The `sci` extra pulls in the scientific Python stack — **numpy**, **scipy**,
