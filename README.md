@@ -605,7 +605,9 @@ code path. See
 - **SQLAlchemy** for optional persistence.
 - Fully type-annotated, `ruff`/`mypy`-friendly, Python 3.13+.
 - **Planned:** OpenAI's *Responses* protocol, Bedrock event-stream decoding,
-  and Vertex AI OAuth token minting.
+  Vertex AI OAuth token minting, and **MCP (Model Context Protocol) support** —
+  client-side consumption of tools served by an external MCP server, adapting
+  them into `Tool` objects (a sibling of `load_toolset`, behind an `mcp` extra).
 
 ## Development
 
