@@ -392,10 +392,10 @@ results = await build("specs/", "tests/generated", model="gpt-5.4")
 python -m pyllym.tdg specs/ --out tests/generated --model gpt-5.4
 ```
 
-## reactuLLM bridge (request-mode planner backend)
+## ReactuLLM bridge (request-mode planner backend)
 
 pyllym can serve as the **request-mode planner backend** for
-[reactuLLM-sdd](https://github.com/) — a sibling TypeScript framework that
+[reactuLLM-sdd](https://github.com/PhotonEra-B-V/ReactuLLM) — a sibling TypeScript framework that
 compiles a TOML spec into a red React Testing Library suite. In request mode
 reactuLLM needs a model to fill a typed `TestPlan` via structured output;
 instead of coupling the two over HTTP, they agree on a **shared JSON contract**
@@ -448,6 +448,31 @@ if is_newer_than_implemented(dir, last_run_id):
 ```bash
 python -m pyllym.reactullm_handoff produce handoff.json   # commit a backend-first handoff
 python -m pyllym.reactullm_handoff consume --implemented 20260713T142233Z
+```
+
+### Runtime handler (serving the live LLM envelope)
+
+Where the bridge is a *build-time* planner, `pyllym.reactullm_runtime` is its
+**runtime twin**: a framework-agnostic `handle()` that serves the live
+end-user LLM request/response envelope agreed with reactuLLM. The server
+registers the tasks it is willing to serve on a `TaskRegistry` — the **task
+name is the authorization key**, so a request can only pick the model and system
+prompt the server registered for that task, never inject its own. Requests and
+responses are validated against the contract's JSON schemas (`LLMRequest` /
+`LLMResponse`, with `LLMError` for failures).
+
+Like the bridge, it is off unless a single env var is set —
+`REACTULLM_PYLLUM_RUNTIME_CONTRACT` (an absolute path to the runtime contract);
+**unset** leaves `is_enabled()` false and the handler dormant.
+
+```python
+from pyllym.reactullm_runtime import handle, is_enabled, LLMRequest, TaskConfig, TaskRegistry
+
+registry = TaskRegistry().register("summarize", TaskConfig(default_prompt="Summarize concisely."))
+
+if is_enabled():
+    request = LLMRequest(task="summarize", input="... text to summarize ...")
+    response = await handle(request, registry=registry)  # LLMResponse honoring the contract
 ```
 
 ## Supported providers
