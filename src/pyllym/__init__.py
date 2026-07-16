@@ -64,7 +64,7 @@ from .transcription import Transcription
 from .uploaded_file import UploadedFile
 from .video import Video
 
-__version__ = "1.16.0"
+__version__ = "1.16.0a1"
 
 _config: Configuration | None = None
 

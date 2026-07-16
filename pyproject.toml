@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyllym"
-version = "1.16.0"
+version = "1.16.0a1"
 description = "One delightful, async-first Python framework for every major AI provider."
 readme = "README.md"
 license = { file = "LICENSE" }
