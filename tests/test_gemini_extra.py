@@ -55,3 +55,31 @@ async def test_gemini_streaming(mock_http):
     chunks = [c.content async for c in chat.stream("hi")]
     assert "".join(c for c in chunks if c) == "Hello!"
     assert chat.messages[-1].content == "Hello!"
+
+
+@pytest.mark.asyncio
+async def test_gemini_system_messages_use_system_instruction(mock_http):
+    from .conftest import sent_requests
+
+    mock_http.post(GENERATE, payload=f.gemini_response("Oui."))
+    chat = pyllym.create_chat(model="gemini-2.5-flash").with_instructions("Be terse")
+    await chat.ask("hi")
+    body = sent_requests(mock_http)[-1].kwargs["json"]
+    assert body["systemInstruction"] == {"parts": [{"text": "Be terse"}]}
+    assert [c["role"] for c in body["contents"]] == ["user"]
+
+
+def test_gemini_multiple_system_messages_concatenate():
+    provider = pyllym.Provider.resolve("gemini")(pyllym.config())
+    payload = provider.render(
+        [
+            pyllym.Message(role="system", content="Be terse"),
+            pyllym.Message(role="system", content="Answer in French"),
+            pyllym.Message(role="user", content="hi"),
+        ],
+        tools={},
+        temperature=None,
+        model=pyllym.models.find("gemini-2.5-flash"),
+    )
+    assert payload["systemInstruction"] == {"parts": [{"text": "Be terse\n\nAnswer in French"}]}
+    assert [c["role"] for c in payload["contents"]] == ["user"]

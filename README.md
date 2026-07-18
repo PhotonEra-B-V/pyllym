@@ -38,6 +38,7 @@ print(message.content)
 - 💬 **Chat** with text, images, audio, PDFs, and documents
 - 🌊 **Streaming** responses via async generators
 - 🔧 **Tools** (function calling) — sync *or* async, run sequentially or concurrently
+- 🔌 **MCP client** — use tools from any MCP server as ordinary pyllym tools (`mcp` extra)
 - 📋 **Structured output** with JSON Schema / Pydantic models
 - 🧠 **Thinking / reasoning** controls (effort & budget)
 - 🔢 **Embeddings**, 🎨 **image generation**, 🗣️ **speech**, 📝 **transcription**, 🛡️ **moderation**
@@ -60,6 +61,7 @@ pip install --pre pyllym          # core
 pip install --pre "pyllym[db]"    # + SQLAlchemy persistence
 pip install --pre "pyllym[celery]" # + Celery background tasks
 pip install --pre "pyllym[mime]"  # + content-based MIME sniffing
+pip install --pre "pyllym[mcp]"   # + MCP client (tools from MCP servers)
 pip install --pre "pyllym[sci]"   # + numerical stack for the data-analysis examples
 pip install --pre "pyllym[dev]"   # + test/lint tooling
 ```
@@ -141,6 +143,40 @@ answer = await chat.ask("What's the weather in Paris?")
 
 Tools may be sync or async. Run them concurrently with
 `chat.with_tools(A, B, concurrency=True)`.
+
+### MCP tools (Model Context Protocol)
+
+Tools don't have to live in your process. With the `mcp` extra
+(`pip install --pre "pyllym[mcp]"`), pyllym connects to any
+[MCP](https://modelcontextprotocol.io) server — spawned locally over stdio or
+remote over streamable HTTP — and adapts its tools into ordinary `Tool`
+objects for the same agentic loop:
+
+```python
+server = pyllym.MCPServer.stdio(
+    "npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"
+)
+async with server as fs:
+    chat = pyllym.create_chat(model="claude-sonnet-5").with_tools(*fs.tools)
+    answer = await chat.ask("List the files in /tmp and summarize them.")
+```
+
+```python
+remote = pyllym.MCPServer.http(
+    "https://example.com/mcp",
+    headers={"Authorization": "Bearer ..."},
+    prefix="docs_",           # namespace tool names across servers
+    only={"search", "fetch"}, # expose a subset
+)
+async with remote as docs:
+    chat = pyllym.create_chat(model="gpt-5.4").with_tools(*docs.tools)
+```
+
+The session stays open for the duration of the `async with` block; tool names,
+descriptions, and JSON schemas come from the server's `tools/list`, and
+`await server.refresh()` re-lists after a `tools/list_changed`. An MCP server
+is an arbitrary external program or endpoint — connect only to servers you
+would be comfortable running by hand.
 
 ### Structured output
 
@@ -610,10 +646,11 @@ code path. See
   loop; call `await pyllym.aclose()` once at application shutdown.
 - **SQLAlchemy** for optional persistence.
 - Fully type-annotated, `ruff`/`mypy`-friendly, Python 3.13+.
+- **MCP (Model Context Protocol)** — client-side consumption of tools served
+  by an external MCP server, adapted into `Tool` objects (a sibling of
+  `load_toolset`, behind the `mcp` extra).
 - **Planned:** OpenAI's *Responses* protocol, Bedrock event-stream decoding,
-  Vertex AI OAuth token minting, and **MCP (Model Context Protocol) support** —
-  client-side consumption of tools served by an external MCP server, adapting
-  them into `Tool` objects (a sibling of `load_toolset`, behind an `mcp` extra).
+  and Vertex AI OAuth token minting.
 
 ## Development
 

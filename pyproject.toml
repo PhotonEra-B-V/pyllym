@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyllym"
-version = "1.16.0a1"
+version = "1.16.0a2"
 description = "One delightful, async-first Python framework for every major AI provider."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -31,6 +31,9 @@ dependencies = [
 
 [project.optional-dependencies]
 db = ["sqlalchemy>=2.0"]
+# MCP (Model Context Protocol) client support — pyllym.MCPServer. Opt-in:
+# `pip install "pyllym[mcp]"`.
+mcp = ["mcp>=1.2"]
 celery = ["celery>=5.4"]
 mime = ["puremagic>=1.28"]
 # Scientific stack for the data-analysis examples (examples/stats.py). Opt-in:

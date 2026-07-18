@@ -36,6 +36,7 @@ src/pyllym/                 # the package
   configuration.py
   errors.py
   chat.py  message.py  content.py  tool.py  tool_call.py
+  toolset.py  mcp.py       # tools from TOML-listed callables / from MCP servers (mcp extra)
   connection.py  protocol.py  streaming.py  stream_accumulator.py
   models.py  model/...      # registry + Model.Info value objects + models.json
   protocols/                # wire formats (chat_completions, anthropic, gemini, ...)
@@ -60,6 +61,11 @@ llm_ignore/                 # read-only reference source, if present (git-ignore
   `to_dict()` and `build()` classmethods. `ToolCall` is a mutable dataclass
   (streaming accumulates argument fragments in place) and `Cost` is a derived
   calculator over `Tokens` + pricing, not a frozen record.
+- MCP client support (`mcp` extra, official `mcp` SDK imported lazily) lives in
+  `mcp.py`: `MCPServer.stdio(...)`/`.http(...)` is an async context manager
+  owning the session; `tools_from_session` adapts each remote tool into an
+  `MCPTool` (a `Tool` subclass), so the adapter is testable against any object
+  with `list_tools`/`call_tool` — no SDK needed in tests.
 - Persistence is a Python-native async SQLAlchemy model factory under
   `persistence/`.
 - Celery integration (`celery` extra) is a task factory under `celery/`:

@@ -66,10 +66,13 @@ class Gemini(Protocol):
         if citations and not model.is_citations():
             self._warn_unsupported_citations(model)
         tool_prefs = tool_prefs or {}
+        system_instruction = self._system_instruction_text(messages)
         payload: dict[str, Any] = {
-            "contents": self._format_messages(messages),
+            "contents": self._format_messages([m for m in messages if m.role != "system"]),
             "generationConfig": {},
         }
+        if system_instruction:
+            payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
         if temperature is not None:
             payload["generationConfig"]["temperature"] = temperature
         if schema:
@@ -230,13 +233,27 @@ class Gemini(Protocol):
         return None
 
     # --- messages --------------------------------------------------------------
+    def _system_instruction_text(self, messages: list[Message]) -> str | None:
+        texts: list[str] = []
+        for msg in messages:
+            if msg.role != "system":
+                continue
+            content = msg.content
+            if isinstance(content, Content):
+                content = content.text
+            elif isinstance(content, RawContent):
+                content = content.value
+            if content:
+                texts.append(content if isinstance(content, str) else json.dumps(content))
+        return "\n\n".join(texts) or None
+
     def _format_messages(self, messages: list[Message]) -> list[dict[str, Any]]:
         return _MessageFormatter(self, messages).format()
 
     def _format_role(self, role: str) -> str:
         if role == "assistant":
             return "model"
-        if role in ("system", "tool"):
+        if role == "tool":
             return "user"
         return role
 

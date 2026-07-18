@@ -211,9 +211,14 @@ class ChatCompletions(Protocol):
         return content
 
     def format_role(self, role: str) -> str:
-        if role == "system":
-            return "system" if self.config.openai_use_system_role else "developer"
+        if role == "system" and self._use_developer_role():
+            return "developer"
         return role
+
+    def _use_developer_role(self) -> bool:
+        if self.config.openai_use_system_role:
+            return False
+        return self.provider.uses_developer_role()
 
     def format_content(
         self,

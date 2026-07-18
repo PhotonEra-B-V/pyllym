@@ -87,3 +87,50 @@ async def test_vllm_local_chat():
         # No api key configured -> no Authorization header sent.
         headers = requests[-1].kwargs.get("headers") or {}
         assert "authorization" not in {k.lower() for k in headers}
+
+
+@pytest.mark.parametrize("provider,base", sorted(OPENAI_COMPATIBLE.items()))
+@pytest.mark.asyncio
+async def test_system_role_per_provider(provider: str, base: str):
+    """Only the OpenAI API itself gets "developer"; everyone else keeps "system"."""
+    expected = "developer" if provider == "openai" else "system"
+    with aioresponses() as m:
+        m.post(f"{base}/chat/completions", payload=f.openai_chat("ok"))
+        chat = pyllym.create_chat(
+            model="some-model", provider=provider, assume_model_exists=True
+        ).with_instructions("be terse")
+        await chat.ask("hi")
+        body = sent_requests(m)[-1].kwargs["json"]
+        roles = [msg["role"] for msg in body["messages"]]
+        assert roles[0] == expected
+
+
+@pytest.mark.asyncio
+async def test_openai_use_system_role_config_override():
+    pyllym.config().openai_use_system_role = True
+    try:
+        with aioresponses() as m:
+            m.post("https://api.openai.com/v1/chat/completions", payload=f.openai_chat("ok"))
+            chat = pyllym.create_chat(
+                model="some-model", provider="openai", assume_model_exists=True
+            ).with_instructions("be terse")
+            await chat.ask("hi")
+            body = sent_requests(m)[-1].kwargs["json"]
+            assert body["messages"][0]["role"] == "system"
+    finally:
+        pyllym.config().openai_use_system_role = None
+
+
+@pytest.mark.asyncio
+async def test_vllm_system_role():
+    """Local providers with their own provider classes also keep "system"."""
+    base = "http://localhost:8000/v1"
+    pyllym.config().vllm_api_base = base
+    with aioresponses() as m:
+        m.post(f"{base}/chat/completions", payload=f.openai_chat("ok"))
+        chat = pyllym.create_chat(
+            model="some-model", provider="vllm", assume_model_exists=True
+        ).with_instructions("be terse")
+        await chat.ask("hi")
+        body = sent_requests(m)[-1].kwargs["json"]
+        assert body["messages"][0]["role"] == "system"

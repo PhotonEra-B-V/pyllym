@@ -56,6 +56,21 @@ class UnsupportedAttachmentError(Exception):
         super().__init__(f"{message}. {self.GUIDANCE}")
 
 
+class ConnectionFailedError(Error):
+    """A request failed at the transport layer (DNS, refused connection,
+    timeout, dropped stream) without a usable HTTP response.
+
+    The original transport exception is preserved as ``__cause__``.
+    """
+
+    default_message = "Connection failed - unable to reach the provider"
+
+    @classmethod
+    def wrap(cls, exc: BaseException) -> ConnectionFailedError:
+        text = str(exc)
+        return cls(None, f"{type(exc).__name__}: {text}" if text else type(exc).__name__)
+
+
 # HTTP status-code errors
 class BadRequestError(Error):
     default_message = "Invalid request - please check your input"

@@ -16,6 +16,8 @@ from typing import TYPE_CHECKING, Any
 import aiohttp
 
 from .errors import (
+    ConnectionFailedError,
+    Error,
     OverloadedError,
     RateLimitError,
     ServerError,
@@ -32,6 +34,9 @@ logger = logging.getLogger("pyllym")
 # Exceptions/statuses worth retrying (mirrors Connection#retry_exceptions).
 _RETRY_STATUSES = {429, 500, 502, 503, 529}
 _RETRY_EXC = (TimeoutError, aiohttp.ClientConnectionError, aiohttp.ClientPayloadError)
+# Any transport-layer failure; always surfaced as ConnectionFailedError so
+# callers only ever need to catch pyllym.errors.Error.
+_TRANSPORT_EXC = (TimeoutError, aiohttp.ClientError)
 _RETRY_ERRORS = (RateLimitError, ServerError, ServiceUnavailableError, OverloadedError)
 
 
@@ -209,12 +214,17 @@ class Connection:
                 last_exc = exc
             except _RETRY_ERRORS as exc:
                 last_exc = exc
+            except _TRANSPORT_EXC as exc:
+                # Non-retryable transport failure (bad URL, TLS, protocol).
+                raise ConnectionFailedError.wrap(exc) from exc
             if attempt < self.config.max_retries:
                 await asyncio.sleep(self._backoff(attempt))
             else:
                 break
         assert last_exc is not None
-        raise last_exc
+        if isinstance(last_exc, Error):
+            raise last_exc
+        raise ConnectionFailedError.wrap(last_exc) from last_exc
 
     async def stream(
         self,
@@ -228,15 +238,18 @@ class Connection:
         Errors (non-200) are raised after reading the error body.
         """
         kwargs = self._request_kwargs(payload, headers, multipart=False)
-        async with self._client.post(self._url(url), **kwargs) as resp:
-            if resp.status >= 400:
-                content = await resp.read()
-                body = _parse_body(resp.headers.get("content-type", ""), content)
-                self._raise_for_response(
-                    Response(status=resp.status, body=body, headers=dict(resp.headers))
-                )
-            async for chunk in resp.content.iter_any():
-                yield chunk
+        try:
+            async with self._client.post(self._url(url), **kwargs) as resp:
+                if resp.status >= 400:
+                    content = await resp.read()
+                    body = _parse_body(resp.headers.get("content-type", ""), content)
+                    self._raise_for_response(
+                        Response(status=resp.status, body=body, headers=dict(resp.headers))
+                    )
+                async for chunk in resp.content.iter_any():
+                    yield chunk
+        except _TRANSPORT_EXC as exc:
+            raise ConnectionFailedError.wrap(exc) from exc
 
     def _raise_for_response(self, response: Response) -> None:
         message = self.provider.parse_error(response)

@@ -254,6 +254,15 @@ class Provider:
         return False
 
     @classmethod
+    def uses_developer_role(cls) -> bool:
+        """Whether system messages should be sent as OpenAI's ``developer`` role.
+
+        Only the OpenAI API itself understands ``developer``; OpenAI-compatible
+        servers mostly reject or ignore it, so everyone else keeps ``system``.
+        """
+        return False
+
+    @classmethod
     def is_configured(cls, config: Configuration) -> bool:
         return all(getattr(config, req, None) for req in cls.configuration_requirements_list())
 

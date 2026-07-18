@@ -46,11 +46,18 @@ class Image:
         """Async variant of :meth:`to_blob` — does not block the event loop."""
         if self.is_base64():
             return base64.b64decode(self.data or "")
-        from .connection import Connection
+        from .connection import _TRANSPORT_EXC, Connection
+        from .errors import ConnectionFailedError, error_for_status
 
-        async with Connection.basic() as client, client.get(self.url) as resp:  # type: ignore[arg-type]
-            resp.raise_for_status()
-            return await resp.read()
+        try:
+            async with Connection.basic() as client, client.get(self.url) as resp:  # type: ignore[arg-type]
+                if resp.status >= 400:
+                    raise error_for_status(resp.status)(
+                        None, f"HTTP {resp.status} fetching {self.url}"
+                    )
+                return await resp.read()
+        except _TRANSPORT_EXC as exc:
+            raise ConnectionFailedError.wrap(exc) from exc
 
     def save(self, path: str | Path) -> str | Path:
         Path(path).expanduser().write_bytes(self.to_blob())

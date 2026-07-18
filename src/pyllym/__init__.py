@@ -28,6 +28,7 @@ from .embedding import Embedding
 from .errors import (
     BadRequestError,
     ConfigurationError,
+    ConnectionFailedError,
     ContextLengthExceededError,
     Error,
     ForbiddenError,
@@ -43,6 +44,7 @@ from .errors import (
     UnsupportedAttachmentError,
 )
 from .image import Image
+from .mcp import MCPNotInstalledError, MCPServer, MCPTool, tools_from_session
 from .message import Message, Role
 from .moderation import Moderation
 from .provider import Provider
@@ -64,7 +66,7 @@ from .transcription import Transcription
 from .uploaded_file import UploadedFile
 from .video import Video
 
-__version__ = "1.16.0a1"
+__version__ = "1.16.0a2"
 
 _config: Configuration | None = None
 
@@ -221,6 +223,7 @@ __all__ = [
     "Citation",
     "Configuration",
     "ConfigurationError",
+    "ConnectionFailedError",
     "Content",
     "Context",
     "ContextLengthExceededError",
@@ -233,6 +236,9 @@ __all__ = [
     "LLMError",
     "LLMRequest",
     "LLMResponse",
+    "MCPNotInstalledError",
+    "MCPServer",
+    "MCPTool",
     "Message",
     "MissingToolPackageError",
     "ModelNotFoundError",
@@ -275,6 +281,7 @@ __all__ = [
     "paint",
     "speak",
     "tool_from_path",
+    "tools_from_session",
     "transcribe",
     "upload",
 ]

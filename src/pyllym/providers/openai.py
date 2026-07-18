@@ -33,6 +33,12 @@ class OpenAI(Provider):
         return {k: v for k, v in raw.items() if v}
 
     @classmethod
+    def uses_developer_role(cls) -> bool:
+        # `cls is OpenAI` so the OpenAI-compatible providers subclassing this
+        # class (DeepSeek, OpenRouter, ...) keep the classic "system" role.
+        return cls is OpenAI
+
+    @classmethod
     def capabilities_cls(cls):
         return OpenAICapabilities
 
