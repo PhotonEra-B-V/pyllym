@@ -19483,6 +19483,88 @@
     }
   },
   {
+    "id": "deepseek-flash",
+    "name": "DeepSeek V4.1 Flash",
+    "provider": "deepseek",
+    "family": "deepseek-flash",
+    "created_at": "2026-09-10 00:00:00 UTC",
+    "context_window": 1000000,
+    "max_output_tokens": 384000,
+    "knowledge_cutoff": null,
+    "modalities": {
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "structured_output",
+      "reasoning",
+      "vision"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 0.15,
+          "output_per_million": 0.6,
+          "cache_read_input_per_million": 0.003,
+          "reasoning_output_per_million": 0.6
+        }
+      }
+    },
+    "metadata": {
+      "object": "model",
+      "owned_by": "deepseek",
+      "source": "models.dev",
+      "provider_id": "deepseek",
+      "open_weights": true,
+      "attachment": true,
+      "temperature": true,
+      "last_updated": "2026-09-10",
+      "interleaved": {
+        "field": "reasoning_content"
+      },
+      "reasoning_options": [
+        {
+          "type": "toggle"
+        },
+        {
+          "type": "effort",
+          "values": [
+            "low",
+            "high",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 0.15,
+        "output": 0.6,
+        "reasoning": 0.6,
+        "cache_read": 0.003
+      },
+      "limit": {
+        "context": 1000000,
+        "output": 384000
+      },
+      "knowledge": "2025-05",
+      "peak_cost": {
+        "input": 0.3,
+        "output": 1.2,
+        "cache_read": 0.006,
+        "hours_utc": [
+          "01:00-04:00",
+          "06:00-10:00"
+        ],
+        "days": "Mon-Fri, excluding Chinese public holidays"
+      }
+    }
+  },
+  {
     "id": "deepseek-reasoner",
     "name": "DeepSeek Reasoner",
     "provider": "deepseek",
@@ -19546,7 +19628,8 @@
     "knowledge_cutoff": null,
     "modalities": {
       "input": [
-        "text"
+        "text",
+        "image"
       ],
       "output": [
         "text"
@@ -19555,14 +19638,16 @@
     "capabilities": [
       "function_calling",
       "structured_output",
-      "reasoning"
+      "reasoning",
+      "vision"
     ],
     "pricing": {
       "text_tokens": {
         "standard": {
-          "input_per_million": 0.14,
-          "output_per_million": 0.28,
-          "cache_read_input_per_million": 0.0028
+          "input_per_million": 0.15,
+          "output_per_million": 0.6,
+          "cache_read_input_per_million": 0.003,
+          "reasoning_output_per_million": 0.6
         }
       }
     },
@@ -19572,9 +19657,9 @@
       "source": "models.dev",
       "provider_id": "deepseek",
       "open_weights": true,
-      "attachment": false,
+      "attachment": true,
       "temperature": true,
-      "last_updated": "2026-04-24",
+      "last_updated": "2026-09-10",
       "interleaved": {
         "field": "reasoning_content"
       },
@@ -19585,35 +19670,49 @@
         {
           "type": "effort",
           "values": [
+            "low",
             "high",
             "max"
           ]
         }
       ],
       "cost": {
-        "input": 0.14,
-        "output": 0.28,
-        "cache_read": 0.0028
+        "input": 0.15,
+        "output": 0.6,
+        "reasoning": 0.6,
+        "cache_read": 0.003
       },
       "limit": {
         "context": 1000000,
         "output": 384000
       },
-      "knowledge": "2025-05"
+      "knowledge": "2025-05",
+      "peak_cost": {
+        "input": 0.3,
+        "output": 1.2,
+        "cache_read": 0.006,
+        "hours_utc": [
+          "01:00-04:00",
+          "06:00-10:00"
+        ],
+        "days": "Mon-Fri, excluding Chinese public holidays"
+      },
+      "served_by": "deepseek-flash"
     }
   },
   {
     "id": "deepseek-v4-pro",
     "name": "DeepSeek V4 Pro",
     "provider": "deepseek",
-    "family": "deepseek-thinking",
+    "family": "deepseek-flash",
     "created_at": "2026-04-24 00:00:00 UTC",
     "context_window": 1000000,
     "max_output_tokens": 384000,
     "knowledge_cutoff": null,
     "modalities": {
       "input": [
-        "text"
+        "text",
+        "image"
       ],
       "output": [
         "text"
@@ -19622,14 +19721,16 @@
     "capabilities": [
       "function_calling",
       "structured_output",
-      "reasoning"
+      "reasoning",
+      "vision"
     ],
     "pricing": {
       "text_tokens": {
         "standard": {
-          "input_per_million": 0.435,
-          "output_per_million": 0.87,
-          "cache_read_input_per_million": 0.003625
+          "input_per_million": 0.15,
+          "output_per_million": 0.6,
+          "cache_read_input_per_million": 0.003,
+          "reasoning_output_per_million": 0.6
         }
       }
     },
@@ -19639,9 +19740,9 @@
       "source": "models.dev",
       "provider_id": "deepseek",
       "open_weights": true,
-      "attachment": false,
+      "attachment": true,
       "temperature": true,
-      "last_updated": "2026-04-24",
+      "last_updated": "2026-09-10",
       "interleaved": {
         "field": "reasoning_content"
       },
@@ -19652,21 +19753,34 @@
         {
           "type": "effort",
           "values": [
+            "low",
             "high",
             "max"
           ]
         }
       ],
       "cost": {
-        "input": 0.435,
-        "output": 0.87,
-        "cache_read": 0.003625
+        "input": 0.15,
+        "output": 0.6,
+        "reasoning": 0.6,
+        "cache_read": 0.003
       },
       "limit": {
         "context": 1000000,
         "output": 384000
       },
-      "knowledge": "2025-05"
+      "knowledge": "2025-05",
+      "peak_cost": {
+        "input": 0.3,
+        "output": 1.2,
+        "cache_read": 0.006,
+        "hours_utc": [
+          "01:00-04:00",
+          "06:00-10:00"
+        ],
+        "days": "Mon-Fri, excluding Chinese public holidays"
+      },
+      "served_by": "deepseek-flash"
     }
   },
   {

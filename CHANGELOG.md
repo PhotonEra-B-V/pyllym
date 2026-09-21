@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.16.0b3 (2026-09-21)
+
+### Added
+
+- **DeepSeek V4.1 Flash** (`deepseek-flash`) registered for the direct
+  `deepseek` provider (released 2026-09-10). 1,000,000-token context window,
+  384,000 max output tokens, native image input (standard `image_url` content
+  blocks — no protocol change needed), tools, structured output, and thinking
+  with a `low`/`high`/`max` effort ladder. A `deepseek-v4.1-flash` convenience
+  key resolves to the canonical id, so
+  `pyllym.chat("deepseek-flash")` works without `provider=`.
+
+### Changed
+
+- **`deepseek-v4-flash` and `deepseek-v4-pro` now carry V4.1 Flash rates and
+  capabilities.** DeepSeek retired V4-Flash and routes the legacy id to
+  V4.1-Flash; since 2026-09-14 04:00 UTC `deepseek-v4-pro` requests are also
+  served and billed as V4.1-Flash until V4.1-Pro launches. Both entries record
+  this as `metadata.served_by = "deepseek-flash"`. Previously costs for these
+  ids were computed from the stale V4 rate card.
+
+  DeepSeek bills by time of day, which the registry's pricing tiers cannot
+  express. `pricing` holds the **off-peak** rate ($0.15 input / $0.60 output /
+  $0.003 cache read per MTok), matching `models.dev`. Peak rates are exactly
+  double (weekdays 01:00–04:00 and 06:00–10:00 UTC, excluding Chinese public
+  holidays) and are recorded under `metadata.peak_cost`; `Cost` will
+  under-report requests made in those windows.
+
 ## 1.16.0b2 (2026-09-08)
 
 ### Added

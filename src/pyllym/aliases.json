@@ -117,6 +117,9 @@
     "deepseek": "deepseek-chat",
     "openrouter": "deepseek/deepseek-chat"
   },
+  "deepseek-flash": {
+    "deepseek": "deepseek-flash"
+  },
   "deepseek-ocr": {
     "vertexai": "deepseek-ai/deepseek-ocr-maas"
   },
@@ -130,6 +133,9 @@
   "deepseek-v3.2": {
     "vertexai": "deepseek-ai/deepseek-v3.2-maas",
     "openrouter": "deepseek/deepseek-v3.2"
+  },
+  "deepseek-v4.1-flash": {
+    "deepseek": "deepseek-flash"
   },
   "deepseek-v4-flash": {
     "deepseek": "deepseek-v4-flash",
