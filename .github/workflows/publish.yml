@@ -21,7 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: astral-sh/setup-uv@v10
+      # setup-uv stopped publishing moving major tags after v7; v8+ exist only
+      # as exact release tags, so `@v10` does not resolve.
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
           python-version: "3.13"
 
