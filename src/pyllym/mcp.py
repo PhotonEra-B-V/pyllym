@@ -18,8 +18,9 @@ module turns tools served by an **external MCP server** into the same
         chat = pyllym.create_chat(model="gpt-5").with_tools(*remote.tools)
 
 Requires the official MCP Python SDK, installed via the ``mcp`` extra
-(``pip install "pyllym[mcp]"``). The SDK is imported lazily — importing
-:mod:`pyllym` (or even this module) never pulls it in.
+(``pip install "pyllym[mcp]"``); both the 1.x and 2.x SDK generations are
+supported. The SDK is imported lazily — importing :mod:`pyllym` (or even this
+module) never pulls it in.
 
 Design notes
 ------------
@@ -158,6 +159,40 @@ async def tools_from_session(
     return tools
 
 
+async def _enter_http_transport(
+    stack: Any, url: str, headers: dict[str, str] | None
+) -> tuple[Any, Any]:
+    """Open streamable-HTTP streams on the exit stack, for either SDK generation.
+
+    The SDK's transport API changed in two steps: late 1.x added
+    ``streamable_http_client(url, *, http_client=...)`` (header configuration
+    moves onto a caller-supplied ``httpx`` client) beside the original
+    ``streamablehttp_client(url, headers=...)``, and 2.0 removed the original
+    and changed the yielded streams from ``(read, write, get_session_id)`` to
+    ``(read, write)``. We probe by attribute rather than by version, prefer
+    the new entry point, and take the first two streams whatever the length.
+    A client we create is entered on ``stack`` because the transport does
+    not close a client it was given.
+    """
+    import importlib
+
+    module = importlib.import_module("mcp.client.streamable_http")
+    new_client = getattr(module, "streamable_http_client", None)
+    if new_client is not None:  # mcp >= 1.2x, including 2.x
+        http_client = None
+        if headers:
+            http_client = await stack.enter_async_context(
+                module.create_mcp_http_client(headers=headers)
+            )
+        streams = await stack.enter_async_context(new_client(url, http_client=http_client))
+    else:  # early 1.x: only the original entry point
+        streams = await stack.enter_async_context(
+            module.streamablehttp_client(url, headers=headers)
+        )
+    read, write = streams[0], streams[1]
+    return read, write
+
+
 class MCPServer:
     """A connection to one MCP server, usable as an async context manager.
 
@@ -249,12 +284,8 @@ class MCPServer:
                 )
                 read, write = await self._stack.enter_async_context(stdio_client(params))
             else:
-                from mcp.client.streamable_http import streamablehttp_client
-
                 assert self._url is not None
-                read, write, _ = await self._stack.enter_async_context(
-                    streamablehttp_client(self._url, headers=self._headers)
-                )
+                read, write = await _enter_http_transport(self._stack, self._url, self._headers)
             session = await self._stack.enter_async_context(ClientSession(read, write))
             await session.initialize()
         except BaseException:

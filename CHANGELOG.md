@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.16.0b4 (2026-09-22)
+
+### Changed
+
+- **Package management moved to [uv](https://docs.astral.sh/uv/).** The repo
+  now ships a committed `uv.lock`; `uv sync` creates `.venv` with the package
+  installed editable plus the dev tooling. Dev tooling (`pytest`, `ruff`,
+  `mypy`, ...) lives in a PEP 735 `[dependency-groups] dev` group instead of
+  the published `dev` extra — `pip install "pyllym[dev]"` no longer exists.
+  The dev group also pulls in the `db`/`celery`/`mcp`/`mime` extras the test
+  suite exercises, and `aiosqlite`, which the persistence tests always needed
+  but nothing declared. The PyPI publish workflow builds with `uv build`, and
+  Dependabot tracks the `uv` ecosystem.
+
+### Fixed
+
+- **`db` extra now declares `sqlalchemy[asyncio]`.** The persistence layer is
+  async SQLAlchemy, which requires `greenlet`; a clean install of
+  `pyllym[db]` previously failed at first use with *"the greenlet library is
+  required to use this function"* unless greenlet happened to be present.
+- **`pyllym[mcp]` works on the mcp 2.x SDK.** mcp 2.0 removed
+  `streamablehttp_client` (its `headers=` keyword moved onto a caller-supplied
+  httpx client) and changed the streams yielded by the transport from
+  `(read, write, get_session_id)` to `(read, write)`, so a fresh install of the
+  extra — which now resolves to 2.x — failed at connect time for HTTP servers.
+  `MCPServer.http` now probes the installed SDK for the newer
+  `streamable_http_client` entry point (present since late 1.x), passes
+  headers through an httpx client it owns and closes, and accepts either
+  stream shape. Verified against real streamable-HTTP servers on mcp 1.20,
+  1.30 and 2.2; stdio transport is unchanged.
+
 ## 1.16.0b3 (2026-09-21)
 
 ### Added

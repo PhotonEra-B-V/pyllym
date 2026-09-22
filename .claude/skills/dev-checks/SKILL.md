@@ -6,7 +6,8 @@ description: Run the pyllym quality gate — ruff lint, ruff format check, mypy 
 # dev-checks
 
 Run the full local quality gate for the **pyllym** package and report results.
-Prefer the project virtualenv (`.venv/bin/*`) so the pinned tool versions are used.
+Prefer the project virtualenv (`.venv/bin/*`, created by `uv sync` from `uv.lock`) so the
+pinned tool versions are used.
 
 ## The gate
 
@@ -28,7 +29,7 @@ for the whole sweep regardless.
 ```
 
 If `.venv/bin/*` is missing, fall back to bare `ruff` / `mypy` / `pytest`, and
-tell the user the venv wasn't found (they may need `pip install -e ".[dev,db]"`).
+tell the user the venv wasn't found (they may need `uv sync`).
 
 ## Conventions to respect
 

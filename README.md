@@ -51,20 +51,22 @@ print(message.content)
 ## Installation
 
 > [!IMPORTANT]
-> pyllym is currently published as a **pre-release** (beta). `pip` skips
-> pre-releases by default, so you must pass `--pre`:
-> `pip install --pre pyllym`. A plain `pip install pyllym` will not find the
-> beta until a stable release exists.
+> pyllym is currently published as a **pre-release** (beta). Resolvers skip
+> pre-releases by default, so opt in explicitly: `uv add --prerelease=allow pyllym`
+> or `pip install --pre pyllym`. A plain `uv add pyllym` / `pip install pyllym`
+> will not find the beta until a stable release exists.
 
 ```bash
-pip install --pre pyllym          # core
-pip install --pre "pyllym[db]"    # + SQLAlchemy persistence
-pip install --pre "pyllym[celery]" # + Celery background tasks
-pip install --pre "pyllym[mime]"  # + content-based MIME sniffing
-pip install --pre "pyllym[mcp]"   # + MCP client (tools from MCP servers)
-pip install --pre "pyllym[sci]"   # + numerical stack for the data-analysis examples
-pip install --pre "pyllym[dev]"   # + test/lint tooling
+uv add --prerelease=allow pyllym            # core
+uv add --prerelease=allow "pyllym[db]"      # + SQLAlchemy persistence
+uv add --prerelease=allow "pyllym[celery]"  # + Celery background tasks
+uv add --prerelease=allow "pyllym[mime]"    # + content-based MIME sniffing
+uv add --prerelease=allow "pyllym[mcp]"     # + MCP client (tools from MCP servers)
+uv add --prerelease=allow "pyllym[sci]"     # + numerical stack for the data-analysis examples
 ```
+
+Not using [uv](https://docs.astral.sh/uv/)? The same extras work with
+`pip install --pre "pyllym[...]"`.
 
 The `sci` extra pulls in the scientific Python stack — **numpy**, **scipy**,
 **pandas**, **matplotlib**, **seaborn**, **scikit-learn**, and **sympy** — used
@@ -72,8 +74,10 @@ only by the data-analysis examples (e.g. [`examples/stats.py`](examples/stats.py
 The core library depends on nothing beyond `aiohttp` and `pydantic`; the
 numerical packages are never imported by `pyllym` itself.
 
-> This repository is a source tree; install it editable with
-> `pip install -e ".[dev,db]"`.
+> This repository is a source tree managed with **uv**. `uv sync` creates
+> `.venv` with the package installed editable plus the dev tooling and the
+> extras the test suite needs (`db`, `celery`, `mcp`, `mime`); add
+> `--extra sci` for the data-analysis examples.
 
 ## Configuration
 
@@ -147,7 +151,8 @@ Tools may be sync or async. Run them concurrently with
 ### MCP tools (Model Context Protocol)
 
 Tools don't have to live in your process. With the `mcp` extra
-(`pip install --pre "pyllym[mcp]"`), pyllym connects to any
+(`uv add --prerelease=allow "pyllym[mcp]"`; SDK 1.x and 2.x both
+work), pyllym connects to any
 [MCP](https://modelcontextprotocol.io) server — spawned locally over stdio or
 remote over streamable HTTP — and adapts its tools into ordinary `Tool`
 objects for the same agentic loop:
@@ -611,7 +616,7 @@ module expansion, and no model-authored-code path. Those callables run
 **in-process**, so treat a toolset file like a list of imports you are choosing
 to run and review it the same way. Heavy libraries (`numpy`, `matplotlib`, …)
 are imported lazily, only when a toolset names them, and live behind the opt-in
-`sci` extra (`pip install -e ".[sci]"`) — which bundles `numpy`, `scipy`,
+`sci` extra (`uv sync --extra sci`) — which bundles `numpy`, `scipy`,
 `pandas`, `scikit-learn`, `statsmodels`, `xgboost`, `lightgbm`, `sympy`, and the
 plotting stack. Any of these (and any other installed library) is reachable by
 dotted path: `sklearn.metrics.r2_score`, `statsmodels.robust.mad`, etc. Model
@@ -655,9 +660,10 @@ code path. See
 ## Development
 
 ```bash
-pip install -e ".[dev,db]"
-ruff check src tests && ruff format --check src tests
-pytest
+uv sync                      # .venv + editable install + dev tooling (locked via uv.lock)
+uv run ruff check src tests && uv run ruff format --check src tests
+uv run mypy src
+uv run pytest
 ```
 
 ## Something is missing

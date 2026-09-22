@@ -10,9 +10,9 @@ Small, runnable scripts for poking at `pyllym` from the terminal against a
   ollama pull gemma4          # or gemma4:31b
   ollama serve                # usually already running
   ```
-- `pyllym` importable. From the repo root, either install it editable:
+- `pyllym` importable. From the repo root, either sync the uv environment:
   ```bash
-  pip install -e ".[dev]"
+  uv sync
   ```
   or just run the scripts from the repo root (they add `src/` to the path).
 
@@ -24,7 +24,7 @@ python examples/stream.py "Write a haiku about the terminal"
 python examples/structured.py
 python examples/tools.py
 python examples/stats.py
-pip install -e ".[sci]"                           # sci stack for the code tool
+uv sync --extra sci                               # sci stack for the code tool
 python examples/stats.py --allow-code             # also expose the code tool
 python examples/moderation.py
 python examples/moderation.py --no-model          # wordlist only, no LLM
@@ -42,7 +42,7 @@ pandas (`pd`), matplotlib (`plt`), seaborn (`sns`), plus `scipy`, `sympy` and
 allowlisted, so `import os` is refused), `print()` output is captured, and any
 plot is saved to `examples/plots/`. The code tool is **not a sandbox** — only
 enable it for a model and data you trust. Install the stack with the opt-in
-extra: `pip install -e ".[sci]"` (the curated tools only need numpy).
+extra: `uv sync --extra sci` (the curated tools only need numpy).
 
 `moderation.py` moderates each quote with **two local signals**: a
 deterministic **wordlist** (the authority — fast, consistent, catches profanity

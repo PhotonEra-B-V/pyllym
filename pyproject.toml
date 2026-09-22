@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyllym"
-version = "1.16.0b3"
+version = "1.16.0b4"
 description = "One delightful, async-first Python framework for every major AI provider."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -30,14 +30,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-db = ["sqlalchemy>=2.0"]
+# Async persistence layer — SQLAlchemy's asyncio support needs greenlet.
+db = ["sqlalchemy[asyncio]>=2.0"]
 # MCP (Model Context Protocol) client support — pyllym.MCPServer. Opt-in:
-# `pip install "pyllym[mcp]"`.
+# `uv add "pyllym[mcp]"` / `pip install "pyllym[mcp]"`. Both SDK generations
+# work: `mcp.py` probes for the 2.x `streamable_http_client` and falls back to
+# the 1.x `streamablehttp_client`.
 mcp = ["mcp>=1.2"]
 celery = ["celery>=5.4"]
 mime = ["puremagic>=1.28"]
 # Scientific stack for the data-analysis examples (examples/stats.py). Opt-in:
-# `pip install -e ".[sci]"`. Not needed by the core library.
+# `uv sync --extra sci`. Not needed by the core library.
 sci = [
     "numpy>=1.26",
     "scipy>=1.11",
@@ -50,17 +53,24 @@ sci = [
     "lightgbm>=4.0",
     "sympy>=1.12",
 ]
-dev = [
-    "pytest>=8",
-    "pytest-asyncio>=0.24",
-    "aioresponses>=0.7.8",
-    "ruff>=0.6",
-    "mypy>=1.11",
-]
 
 [project.urls]
 Homepage = "https://github.com/PhotonEra-B-V/malayopython_reticulatus_llm"
 Source = "https://github.com/PhotonEra-B-V/malayopython_reticulatus_llm"
+
+# Development tooling (PEP 735 dependency group). Not published as an extra;
+# `uv sync` installs it by default, together with the extras the test suite
+# exercises (persistence, Celery, MCP, MIME sniffing).
+[dependency-groups]
+dev = [
+    "pyllym[db,celery,mcp,mime]",
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "aioresponses>=0.7.8",
+    "aiosqlite>=0.20",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pyllym"]
