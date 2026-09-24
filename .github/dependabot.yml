@@ -3,9 +3,10 @@
 # dependency-bump PRs on a schedule. Docs: https://docs.github.com/code-security/dependabot
 version: 2
 updates:
-  # Python dependencies declared in pyproject.toml (core deps + extras: dev, sci,
-  # db, celery, mime). Grouped so related bumps land in one PR instead of many.
-  - package-ecosystem: "pip"
+  # Python dependencies declared in pyproject.toml / pinned in uv.lock (core deps,
+  # the dev dependency group, and the sci/db/celery/mcp/mime extras). Grouped so
+  # related bumps land in one PR instead of many.
+  - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"

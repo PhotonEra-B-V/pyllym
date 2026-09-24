@@ -27,6 +27,7 @@ exist under `llm_ignore/` (git-ignored — never ship or import from it).
 | Persistence (optional) | SQLAlchemy 2.x (async) |
 | Tests | `pytest` + `pytest-asyncio` |
 | Lint / format / types | `ruff`, `mypy` |
+| Package management | `uv` (`pyproject.toml` + `uv.lock`) |
 
 ## Layout
 
@@ -114,14 +115,18 @@ register it in `pyllym/__init__.py`.
 ## Commands
 
 ```bash
-# install (editable, with dev + persistence extras)
-pip install -e ".[dev,db]"
+# install: .venv + editable package + dev group (test/lint tooling and the
+# db/celery/mcp/mime extras the suite exercises). Add --extra sci for examples.
+uv sync
 
 # lint / format / types
-ruff check src tests && ruff format --check src tests && mypy src
+uv run ruff check src tests && uv run ruff format --check src tests && uv run mypy src
 
 # tests
-pytest
+uv run pytest
+
+# dependencies: `uv add <pkg>` / `uv add --group dev <pkg>` / `uv add --optional db <pkg>`;
+# commit the updated uv.lock. Never hand-edit uv.lock.
 ```
 
 ## Conventions

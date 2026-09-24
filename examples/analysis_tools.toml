@@ -6,7 +6,7 @@
 # is no wildcard/module expansion. The listed callables run in-process, so treat
 # this file like a list of imports you are choosing to run: review it as such.
 #
-# `numpy` requires the opt-in scientific extra: `pip install -e ".[sci]"`.
+# `numpy` requires the opt-in scientific extra: `uv sync --extra sci`.
 # The `statistics` entries are stdlib and need no extra.
 
 [[tools]]

@@ -7,14 +7,22 @@ against a stand-in session, so they run without the SDK installed.
 
 from __future__ import annotations
 
-from types import SimpleNamespace
+import sys
+from contextlib import AsyncExitStack, asynccontextmanager
+from types import ModuleType, SimpleNamespace
 from typing import Any
 
 import pytest
 
 import pyllym
 from pyllym.errors import ConfigurationError
-from pyllym.mcp import MCPServer, MCPTool, _convert_result, tools_from_session
+from pyllym.mcp import (
+    MCPServer,
+    MCPTool,
+    _convert_result,
+    _enter_http_transport,
+    tools_from_session,
+)
 
 
 def _tool_entry(name: str, description: str | None = None, schema: dict | None = None) -> Any:
@@ -186,3 +194,135 @@ async def test_mcp_tools_plug_into_chat_registry():
     chat = pyllym.create_chat(model="gpt-4o", assume_model_exists=True, provider="openai")
     chat.with_tools(tool)
     assert "lookup" in chat.tools
+
+
+# --- _enter_http_transport (SDK 1.x vs 2.x shapes) ---------------------------
+
+
+def _install_fake_streamable_http(monkeypatch: pytest.MonkeyPatch, **attrs: Any) -> None:
+    """Register a stand-in ``mcp.client.streamable_http`` module exposing ``attrs``."""
+    root = ModuleType("mcp")
+    client = ModuleType("mcp.client")
+    transport = ModuleType("mcp.client.streamable_http")
+    for name, value in attrs.items():
+        setattr(transport, name, value)
+    root.client = client  # type: ignore[attr-defined]
+    client.streamable_http = transport  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "mcp", root)
+    monkeypatch.setitem(sys.modules, "mcp.client", client)
+    monkeypatch.setitem(sys.modules, "mcp.client.streamable_http", transport)
+
+
+async def test_http_transport_early_v1_uses_headers_kwarg_and_drops_session_id(monkeypatch):
+    seen: dict[str, Any] = {}
+    closed: list[str] = []
+
+    @asynccontextmanager
+    async def streamablehttp_client(url: str, *, headers: dict[str, str] | None = None):
+        seen.update(url=url, headers=headers)
+        try:
+            yield "read", "write", lambda: "session-id"
+        finally:
+            closed.append("transport")
+
+    _install_fake_streamable_http(monkeypatch, streamablehttp_client=streamablehttp_client)
+    async with AsyncExitStack() as stack:
+        streams = await _enter_http_transport(stack, "https://x/mcp", {"Authorization": "b t"})
+    assert streams == ("read", "write")
+    assert seen == {"url": "https://x/mcp", "headers": {"Authorization": "b t"}}
+    assert closed == ["transport"]
+
+
+async def test_http_transport_uses_v2_httpx_client_for_headers(monkeypatch):
+    seen: dict[str, Any] = {}
+    closed: list[str] = []
+
+    class FakeHttpClient:
+        def __init__(self, headers: dict[str, str] | None) -> None:
+            self.headers = headers
+
+        async def __aenter__(self) -> FakeHttpClient:
+            return self
+
+        async def __aexit__(self, *exc: Any) -> None:
+            closed.append("http_client")
+
+    def create_mcp_http_client(headers: dict[str, str] | None = None) -> FakeHttpClient:
+        return FakeHttpClient(headers)
+
+    @asynccontextmanager
+    async def streamable_http_client(url: str, *, http_client: Any = None):
+        seen.update(url=url, http_client=http_client)
+        try:
+            yield ("read", "write")  # TransportStreams: a 2-tuple
+        finally:
+            closed.append("transport")
+
+    _install_fake_streamable_http(
+        monkeypatch,
+        streamable_http_client=streamable_http_client,
+        create_mcp_http_client=create_mcp_http_client,
+    )
+    async with AsyncExitStack() as stack:
+        streams = await _enter_http_transport(stack, "https://x/mcp", {"Authorization": "b t"})
+    assert streams == ("read", "write")
+    assert seen["url"] == "https://x/mcp"
+    assert seen["http_client"].headers == {"Authorization": "b t"}
+    # The transport is torn down before the client we own, and the client is closed at all.
+    assert closed == ["transport", "http_client"]
+
+
+async def test_http_transport_prefers_new_entry_point_and_tolerates_v1_triple(monkeypatch):
+    """Late 1.x exposes both names; the new one still yields a 3-tuple there."""
+    seen: dict[str, Any] = {}
+
+    class FakeHttpClient:
+        def __init__(self, headers: dict[str, str] | None) -> None:
+            self.headers = headers
+
+        async def __aenter__(self) -> FakeHttpClient:
+            return self
+
+        async def __aexit__(self, *exc: Any) -> None:
+            pass
+
+    @asynccontextmanager
+    async def streamablehttp_client(url: str, *, headers: dict[str, str] | None = None):
+        raise AssertionError("the original entry point must not be used when the new one exists")
+        yield  # pragma: no cover
+
+    @asynccontextmanager
+    async def streamable_http_client(url: str, *, http_client: Any = None):
+        seen.update(http_client=http_client)
+        yield ("read", "write", lambda: "session-id")
+
+    _install_fake_streamable_http(
+        monkeypatch,
+        streamablehttp_client=streamablehttp_client,
+        streamable_http_client=streamable_http_client,
+        create_mcp_http_client=lambda headers=None: FakeHttpClient(headers),
+    )
+    async with AsyncExitStack() as stack:
+        assert await _enter_http_transport(stack, "https://x/mcp", {"A": "b"}) == ("read", "write")
+    assert seen["http_client"].headers == {"A": "b"}
+
+
+async def test_http_transport_v2_without_headers_lets_sdk_build_client(monkeypatch):
+    seen: dict[str, Any] = {}
+
+    def create_mcp_http_client(headers: dict[str, str] | None = None) -> Any:
+        raise AssertionError("no client should be built when there are no headers")
+
+    @asynccontextmanager
+    async def streamable_http_client(url: str, *, http_client: Any = None):
+        seen.update(http_client=http_client)
+        yield ("read", "write")
+
+    _install_fake_streamable_http(
+        monkeypatch,
+        streamable_http_client=streamable_http_client,
+        create_mcp_http_client=create_mcp_http_client,
+    )
+    async with AsyncExitStack() as stack:
+        assert await _enter_http_transport(stack, "https://x/mcp", None) == ("read", "write")
+    assert seen == {"http_client": None}
