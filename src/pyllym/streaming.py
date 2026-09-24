@@ -148,12 +148,14 @@ class StreamingMixin:
     @staticmethod
     def _stream_error_class(error_type: str) -> type[Error]:
         # Map in-stream error types to the same taxonomy as HTTP statuses.
-        from .errors import OverloadedError, RateLimitError, ServerError
+        from .errors import OverloadedError, PaymentRequiredError, RateLimitError, ServerError
 
         key = error_type.lower()
         if "overloaded" in key:
             return OverloadedError
-        if "rate_limit" in key or "insufficient_quota" in key:
+        if "insufficient_quota" in key:
+            return PaymentRequiredError
+        if "rate_limit" in key:
             return RateLimitError
         if "server_error" in key:
             return ServerError

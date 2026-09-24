@@ -12,6 +12,9 @@ class Error(Exception):
     """
 
     default_message: str | None = None
+    #: Seconds the provider asked us to wait before retrying (from
+    #: ``Retry-After`` and friends), when the response carried such a hint.
+    retry_after: float | None = None
 
     def __init__(self, response: Any = None, message: str | None = None) -> None:
         if isinstance(response, str):
@@ -144,10 +147,35 @@ def is_context_length_message(message: str | None) -> bool:
     return any(pattern in lowered for pattern in CONTEXT_LENGTH_PATTERNS)
 
 
+# Some providers report an exhausted balance/quota as HTTP 429 (OpenAI
+# ``insufficient_quota``, Zhipu/z.ai code 1113). That is a billing problem,
+# not throttling: waiting and retrying can never succeed, so it maps to
+# PaymentRequiredError instead of the retried RateLimitError.
+QUOTA_PATTERNS = (
+    "insufficient_quota",
+    "insufficient quota",
+    "exceeded your current quota",
+    "insufficient balance",
+    "insufficient_balance",
+    "please recharge",
+    "余额不足",
+    "欠费",
+)
+
+
+def is_quota_message(message: str | None) -> bool:
+    if not message:
+        return False
+    lowered = message.lower()
+    return any(pattern in lowered for pattern in QUOTA_PATTERNS)
+
+
 def error_for_status(status: int, message: str | None = None) -> type[Error]:
     """Return the most appropriate :class:`Error` subclass for an HTTP status."""
     if status in (400, 413, 429) and is_context_length_message(message):
         return ContextLengthExceededError
+    if status == 429 and is_quota_message(message):
+        return PaymentRequiredError
     if status in STATUS_ERRORS:
         return STATUS_ERRORS[status]
     if 400 <= status < 500:

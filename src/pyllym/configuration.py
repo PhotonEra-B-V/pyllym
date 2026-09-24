@@ -33,6 +33,14 @@ _SYSTEM_DEFAULTS: dict[str, Any] = {
     "retry_interval": 0.1,
     "retry_backoff_factor": 2,
     "retry_interval_randomness": 0.5,
+    # 429s without a Retry-After hint back off from here (seconds); the plain
+    # retry_interval is tuned for transient 5xx blips, far too short for a
+    # throttling window.
+    "rate_limit_retry_interval": 1.0,
+    # Longest single wait between attempts (seconds), whether computed or
+    # server-requested; a Retry-After above this gives up immediately. None
+    # disables the cap.
+    "retry_max_interval": 60.0,
     "http_proxy": None,
     "tool_concurrency": False,
     "auto_upload_large_files": True,
