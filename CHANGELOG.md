@@ -1,5 +1,35 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **Rate limits are actually waited out.** A 429 used to be retried with the
+  generic backoff (0.1s, 0.2s, 0.4s — under a second in total), so hitting a
+  provider's throttle (seen with Zhipu GLM's 1302/1303/1305 limits) surfaced
+  as `RateLimitError` almost immediately. Rate limits now back off from a new
+  `rate_limit_retry_interval` (default 1s, so 1s/2s/4s across the default
+  three retries), and a server-supplied `Retry-After` / `retry-after-ms` /
+  OpenAI `x-ratelimit-reset-*` hint is honored over the computed delay. A new
+  `retry_max_interval` (default 60s) caps any single wait; a hint above it
+  gives up at once rather than retrying into a certain refusal. The parsed
+  hint is exposed as `Error.retry_after` for callers that schedule their own
+  retry.
+- **Streaming requests retry too.** `Connection.stream` raised on the first
+  429/5xx or connection error without a single retry, so `chat.stream(...)`
+  was far more fragile than `chat.ask(...)`. Retryable failures that happen
+  before the first body byte now follow the same policy; a stream that drops
+  after it has started still surfaces as `ConnectionFailedError`, since it
+  cannot be replayed.
+- **Exhausted quota is `PaymentRequiredError`, not a retried 429.** OpenAI
+  `insufficient_quota` and Zhipu/z.ai code 1113 ("insufficient balance ...
+  please recharge") arrive as HTTP 429 but cannot succeed on retry; they now
+  map to `PaymentRequiredError` (both HTTP and in-stream) instead of being
+  backed off and re-sent. Code catching `RateLimitError` for those should
+  catch `PaymentRequiredError` as well.
+- Each retry is logged at INFO with the delay and the error class, so
+  throttling is visible instead of silent.
+
 ## 1.16.0b4 (2026-09-22)
 
 ### Changed
