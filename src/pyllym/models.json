@@ -511,7 +511,7 @@
     "created_at": "2026-08-19 00:00:00 UTC",
     "context_window": 1000000,
     "max_output_tokens": 128000,
-    "knowledge_cutoff": null,
+    "knowledge_cutoff": "2026-06",
     "modalities": {
       "input": [
         "text",
@@ -539,12 +539,12 @@
       }
     },
     "metadata": {
-      "source": "manual",
+      "source": "models.dev",
       "provider_id": "anthropic",
       "open_weights": false,
       "attachment": true,
       "temperature": false,
-      "last_updated": "2026-09-08",
+      "last_updated": "2026-09-01",
       "reasoning_options": [
         {
           "type": "effort",
@@ -566,7 +566,8 @@
       "limit": {
         "context": 1000000,
         "output": 128000
-      }
+      },
+      "knowledge": "2026-06"
     }
   },
   {
@@ -1214,7 +1215,7 @@
     "created_at": "2026-05-28 00:00:00 UTC",
     "context_window": 1000000,
     "max_output_tokens": 128000,
-    "knowledge_cutoff": null,
+    "knowledge_cutoff": "2026-01",
     "modalities": {
       "input": [
         "text",
@@ -1269,7 +1270,142 @@
       "limit": {
         "context": 1000000,
         "output": 128000
+      },
+      "knowledge": "2026-01"
+    }
+  },
+  {
+    "id": "claude-opus-5",
+    "name": "Claude Opus 5",
+    "provider": "anthropic",
+    "family": "claude-opus",
+    "created_at": "2026-07-24 00:00:00 UTC",
+    "context_window": 1000000,
+    "max_output_tokens": 128000,
+    "knowledge_cutoff": "2026-05",
+    "modalities": {
+      "input": [
+        "text",
+        "image",
+        "pdf"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "reasoning",
+      "vision",
+      "citations"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 5,
+          "output_per_million": 25,
+          "cache_read_input_per_million": 0.5,
+          "cache_write_input_per_million": 6.25
+        }
       }
+    },
+    "metadata": {
+      "source": "models.dev",
+      "provider_id": "anthropic",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-07-24",
+      "reasoning_options": [
+        {
+          "type": "effort",
+          "values": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 5,
+        "output": 25,
+        "cache_read": 0.5,
+        "cache_write": 6.25
+      },
+      "limit": {
+        "context": 1000000,
+        "output": 128000
+      },
+      "knowledge": "2026-05"
+    }
+  },
+  {
+    "id": "claude-opus-5-5",
+    "name": "Claude Opus 5.5",
+    "provider": "anthropic",
+    "family": "claude-opus",
+    "created_at": "2026-09-22 00:00:00 UTC",
+    "context_window": 1000000,
+    "max_output_tokens": 128000,
+    "knowledge_cutoff": "2026-06",
+    "modalities": {
+      "input": [
+        "text",
+        "image",
+        "pdf"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "reasoning",
+      "vision",
+      "citations"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 4,
+          "output_per_million": 20,
+          "cache_read_input_per_million": 0.2,
+          "cache_write_input_per_million": 5
+        }
+      }
+    },
+    "metadata": {
+      "source": "models.dev",
+      "provider_id": "anthropic",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-09-22",
+      "reasoning_options": [
+        {
+          "type": "effort",
+          "values": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 4,
+        "output": 20,
+        "cache_read": 0.2,
+        "cache_write": 5
+      },
+      "limit": {
+        "context": 1000000,
+        "output": 128000
+      },
+      "knowledge": "2026-06"
     }
   },
   {
@@ -1399,7 +1535,7 @@
     "provider": "anthropic",
     "family": "claude-sonnet",
     "created_at": "2025-09-29 00:00:00 UTC",
-    "context_window": 200000,
+    "context_window": 1000000,
     "max_output_tokens": 64000,
     "knowledge_cutoff": "2025-07-31",
     "modalities": {
@@ -1447,7 +1583,7 @@
         "cache_write": 3.75
       },
       "limit": {
-        "context": 200000,
+        "context": 1000000,
         "output": 64000
       },
       "knowledge": "2025-07-31"
@@ -1459,7 +1595,7 @@
     "provider": "anthropic",
     "family": "claude-sonnet",
     "created_at": "2025-09-29 00:00:00 UTC",
-    "context_window": 200000,
+    "context_window": 1000000,
     "max_output_tokens": 64000,
     "knowledge_cutoff": "2025-07-31",
     "modalities": {
@@ -1508,7 +1644,7 @@
         "cache_write": 3.75
       },
       "limit": {
-        "context": 200000,
+        "context": 1000000,
         "output": 64000
       },
       "knowledge": "2025-07-31"
@@ -1521,7 +1657,7 @@
     "family": "claude-sonnet",
     "created_at": "2026-02-17 00:00:00 UTC",
     "context_window": 1000000,
-    "max_output_tokens": 64000,
+    "max_output_tokens": 128000,
     "knowledge_cutoff": "2025-08-31",
     "modalities": {
       "input": [
@@ -1579,9 +1715,146 @@
       },
       "limit": {
         "context": 1000000,
-        "output": 64000
+        "output": 128000
       },
       "knowledge": "2025-08-31"
+    }
+  },
+  {
+    "id": "claude-sonnet-5",
+    "name": "Claude Sonnet 5",
+    "provider": "anthropic",
+    "family": "claude-sonnet",
+    "created_at": "2026-06-29 00:00:00 UTC",
+    "context_window": 1000000,
+    "max_output_tokens": 128000,
+    "knowledge_cutoff": "2026-01-31",
+    "modalities": {
+      "input": [
+        "text",
+        "image",
+        "pdf"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "reasoning",
+      "vision",
+      "citations"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 2,
+          "output_per_million": 10,
+          "cache_read_input_per_million": 0.2,
+          "cache_write_input_per_million": 2.5
+        }
+      }
+    },
+    "metadata": {
+      "source": "models.dev",
+      "provider_id": "anthropic",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-06-30",
+      "reasoning_options": [
+        {
+          "type": "toggle"
+        },
+        {
+          "type": "effort",
+          "values": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 2,
+        "output": 10,
+        "cache_read": 0.2,
+        "cache_write": 2.5
+      },
+      "limit": {
+        "context": 1000000,
+        "output": 128000
+      },
+      "knowledge": "2026-01-31"
+    }
+  },
+  {
+    "id": "claude-sonnet-5-5",
+    "name": "Claude Sonnet 5.5",
+    "provider": "anthropic",
+    "family": "claude-sonnet",
+    "created_at": "2026-09-28 00:00:00 UTC",
+    "context_window": 1000000,
+    "max_output_tokens": 128000,
+    "knowledge_cutoff": "2026-06",
+    "modalities": {
+      "input": [
+        "text",
+        "image",
+        "pdf"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "reasoning",
+      "vision",
+      "citations"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 2,
+          "output_per_million": 10,
+          "cache_read_input_per_million": 0.2,
+          "cache_write_input_per_million": 2.5
+        }
+      }
+    },
+    "metadata": {
+      "source": "models.dev",
+      "provider_id": "anthropic",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-09-28",
+      "reasoning_options": [
+        {
+          "type": "effort",
+          "values": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 2,
+        "output": 10,
+        "cache_read": 0.2,
+        "cache_write": 2.5
+      },
+      "limit": {
+        "context": 1000000,
+        "output": 128000
+      },
+      "knowledge": "2026-06"
     }
   },
   {
@@ -28343,10 +28616,366 @@
     }
   },
   {
+    "id": "gpt-5.6",
+    "name": "GPT-5.6",
+    "provider": "openai",
+    "family": "gpt-sol",
+    "created_at": "2026-07-09 00:00:00 UTC",
+    "context_window": 1050000,
+    "max_output_tokens": 128000,
+    "knowledge_cutoff": "2026-02-16",
+    "modalities": {
+      "input": [
+        "text",
+        "image",
+        "pdf"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "structured_output",
+      "reasoning",
+      "vision"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 4,
+          "output_per_million": 20,
+          "cache_read_input_per_million": 0.4,
+          "cache_write_input_per_million": 5
+        }
+      }
+    },
+    "metadata": {
+      "object": "model",
+      "owned_by": "system",
+      "source": "models.dev",
+      "provider_id": "openai",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-07-09",
+      "reasoning_options": [
+        {
+          "type": "effort",
+          "values": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 4,
+        "output": 20,
+        "cache_read": 0.4,
+        "cache_write": 5,
+        "tiers": [
+          {
+            "input": 8,
+            "output": 30,
+            "cache_read": 0.8,
+            "cache_write": 10,
+            "tier": {
+              "type": "context",
+              "size": 272000
+            }
+          }
+        ],
+        "context_over_200k": {
+          "input": 8,
+          "output": 30,
+          "cache_read": 0.8,
+          "cache_write": 10
+        }
+      },
+      "limit": {
+        "context": 1050000,
+        "input": 922000,
+        "output": 128000
+      },
+      "knowledge": "2026-02-16"
+    }
+  },
+  {
+    "id": "gpt-5.6-luna",
+    "name": "GPT-5.6 Luna",
+    "provider": "openai",
+    "family": "gpt-luna",
+    "created_at": "2026-07-09 00:00:00 UTC",
+    "context_window": 1050000,
+    "max_output_tokens": 128000,
+    "knowledge_cutoff": "2026-02-16",
+    "modalities": {
+      "input": [
+        "text",
+        "image",
+        "pdf"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "structured_output",
+      "reasoning",
+      "vision"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 0.2,
+          "output_per_million": 1.2,
+          "cache_read_input_per_million": 0.02,
+          "cache_write_input_per_million": 0.25
+        }
+      }
+    },
+    "metadata": {
+      "object": "model",
+      "owned_by": "system",
+      "source": "models.dev",
+      "provider_id": "openai",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-07-09",
+      "reasoning_options": [
+        {
+          "type": "effort",
+          "values": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 0.2,
+        "output": 1.2,
+        "cache_read": 0.02,
+        "cache_write": 0.25,
+        "tiers": [
+          {
+            "input": 0.4,
+            "output": 1.8,
+            "cache_read": 0.04,
+            "cache_write": 0.5,
+            "tier": {
+              "type": "context",
+              "size": 272000
+            }
+          }
+        ],
+        "context_over_200k": {
+          "input": 0.4,
+          "output": 1.8,
+          "cache_read": 0.04,
+          "cache_write": 0.5
+        }
+      },
+      "limit": {
+        "context": 1050000,
+        "input": 922000,
+        "output": 128000
+      },
+      "knowledge": "2026-02-16"
+    }
+  },
+  {
+    "id": "gpt-5.6-sol",
+    "name": "GPT-5.6 Sol",
+    "provider": "openai",
+    "family": "gpt-sol",
+    "created_at": "2026-07-09 00:00:00 UTC",
+    "context_window": 1050000,
+    "max_output_tokens": 128000,
+    "knowledge_cutoff": "2026-02-16",
+    "modalities": {
+      "input": [
+        "text",
+        "image",
+        "pdf"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "structured_output",
+      "reasoning",
+      "vision"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 4,
+          "output_per_million": 20,
+          "cache_read_input_per_million": 0.4,
+          "cache_write_input_per_million": 5
+        }
+      }
+    },
+    "metadata": {
+      "object": "model",
+      "owned_by": "system",
+      "source": "models.dev",
+      "provider_id": "openai",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-07-09",
+      "reasoning_options": [
+        {
+          "type": "effort",
+          "values": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 4,
+        "output": 20,
+        "cache_read": 0.4,
+        "cache_write": 5,
+        "tiers": [
+          {
+            "input": 8,
+            "output": 30,
+            "cache_read": 0.8,
+            "cache_write": 10,
+            "tier": {
+              "type": "context",
+              "size": 272000
+            }
+          }
+        ],
+        "context_over_200k": {
+          "input": 8,
+          "output": 30,
+          "cache_read": 0.8,
+          "cache_write": 10
+        }
+      },
+      "limit": {
+        "context": 1050000,
+        "input": 922000,
+        "output": 128000
+      },
+      "knowledge": "2026-02-16"
+    }
+  },
+  {
+    "id": "gpt-5.6-terra",
+    "name": "GPT-5.6 Terra",
+    "provider": "openai",
+    "family": "gpt-terra",
+    "created_at": "2026-07-09 00:00:00 UTC",
+    "context_window": 1050000,
+    "max_output_tokens": 128000,
+    "knowledge_cutoff": "2026-02-16",
+    "modalities": {
+      "input": [
+        "text",
+        "image",
+        "pdf"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "structured_output",
+      "reasoning",
+      "vision"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 2,
+          "output_per_million": 12,
+          "cache_read_input_per_million": 0.2,
+          "cache_write_input_per_million": 2.5
+        }
+      }
+    },
+    "metadata": {
+      "object": "model",
+      "owned_by": "system",
+      "source": "models.dev",
+      "provider_id": "openai",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-07-09",
+      "reasoning_options": [
+        {
+          "type": "effort",
+          "values": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 2,
+        "output": 12,
+        "cache_read": 0.2,
+        "cache_write": 2.5,
+        "tiers": [
+          {
+            "input": 4,
+            "output": 18,
+            "cache_read": 0.4,
+            "cache_write": 5,
+            "tier": {
+              "type": "context",
+              "size": 272000
+            }
+          }
+        ],
+        "context_over_200k": {
+          "input": 4,
+          "output": 18,
+          "cache_read": 0.4,
+          "cache_write": 5
+        }
+      },
+      "limit": {
+        "context": 1050000,
+        "input": 922000,
+        "output": 128000
+      },
+      "knowledge": "2026-02-16"
+    }
+  },
+  {
     "id": "gpt-6-astra",
     "name": "GPT-6 Astra",
     "provider": "openai",
-    "family": "gpt",
+    "family": "gpt-astra",
     "created_at": "2026-09-03 00:00:00 UTC",
     "context_window": 1050000,
     "max_output_tokens": 128000,
@@ -28380,12 +29009,12 @@
     "metadata": {
       "object": "model",
       "owned_by": "system",
-      "source": "manual",
+      "source": "models.dev",
       "provider_id": "openai",
       "open_weights": false,
       "attachment": true,
       "temperature": false,
-      "last_updated": "2026-09-08",
+      "last_updated": "2026-09-04",
       "reasoning_options": [
         {
           "type": "effort",
@@ -28408,6 +29037,7 @@
             "input": 20,
             "output": 75,
             "cache_read": 2,
+            "cache_write": 25,
             "tier": {
               "type": "context",
               "size": 272000
@@ -28417,11 +29047,13 @@
         "context_over_200k": {
           "input": 20,
           "output": 75,
-          "cache_read": 2
+          "cache_read": 2,
+          "cache_write": 25
         }
       },
       "limit": {
         "context": 1050000,
+        "input": 922000,
         "output": 128000
       },
       "knowledge": "2026-04-30"
@@ -28431,7 +29063,7 @@
     "id": "gpt-6-astra-pro",
     "name": "GPT-6 Astra Pro",
     "provider": "openai",
-    "family": "gpt",
+    "family": "gpt-astra",
     "created_at": "2026-09-03 00:00:00 UTC",
     "context_window": 1050000,
     "max_output_tokens": 128000,
@@ -28493,6 +29125,7 @@
             "input": 20,
             "output": 75,
             "cache_read": 2,
+            "cache_write": 25,
             "tier": {
               "type": "context",
               "size": 272000
@@ -28502,11 +29135,279 @@
         "context_over_200k": {
           "input": 20,
           "output": 75,
-          "cache_read": 2
+          "cache_read": 2,
+          "cache_write": 25
         }
       },
       "limit": {
         "context": 1050000,
+        "input": 922000,
+        "output": 128000
+      },
+      "knowledge": "2026-04-30"
+    }
+  },
+  {
+    "id": "gpt-6-luna",
+    "name": "GPT-6 Luna",
+    "provider": "openai",
+    "family": "gpt-luna",
+    "created_at": "2026-09-22 00:00:00 UTC",
+    "context_window": 1050000,
+    "max_output_tokens": 128000,
+    "knowledge_cutoff": "2026-05-18",
+    "modalities": {
+      "input": [
+        "text",
+        "image",
+        "pdf"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "structured_output",
+      "reasoning",
+      "vision"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 0.1,
+          "output_per_million": 0.5,
+          "cache_read_input_per_million": 0.01,
+          "cache_write_input_per_million": 0.125
+        }
+      }
+    },
+    "metadata": {
+      "object": "model",
+      "owned_by": "system",
+      "source": "models.dev",
+      "provider_id": "openai",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-09-22",
+      "reasoning_options": [
+        {
+          "type": "effort",
+          "values": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 0.1,
+        "output": 0.5,
+        "cache_read": 0.01,
+        "cache_write": 0.125,
+        "tiers": [
+          {
+            "input": 0.2,
+            "output": 0.75,
+            "cache_read": 0.02,
+            "cache_write": 0.25,
+            "tier": {
+              "type": "context",
+              "size": 272000
+            }
+          }
+        ],
+        "context_over_200k": {
+          "input": 0.2,
+          "output": 0.75,
+          "cache_read": 0.02,
+          "cache_write": 0.25
+        }
+      },
+      "limit": {
+        "context": 1050000,
+        "input": 922000,
+        "output": 128000
+      },
+      "knowledge": "2026-05-18"
+    }
+  },
+  {
+    "id": "gpt-6-sol",
+    "name": "GPT-6 Sol",
+    "provider": "openai",
+    "family": "gpt-sol",
+    "created_at": "2026-09-22 00:00:00 UTC",
+    "context_window": 1050000,
+    "max_output_tokens": 128000,
+    "knowledge_cutoff": "2026-04-20",
+    "modalities": {
+      "input": [
+        "text",
+        "image",
+        "pdf"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "structured_output",
+      "reasoning",
+      "vision"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 2,
+          "output_per_million": 10,
+          "cache_read_input_per_million": 0.2,
+          "cache_write_input_per_million": 2.5
+        }
+      }
+    },
+    "metadata": {
+      "object": "model",
+      "owned_by": "system",
+      "source": "models.dev",
+      "provider_id": "openai",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-09-22",
+      "reasoning_options": [
+        {
+          "type": "effort",
+          "values": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 2,
+        "output": 10,
+        "cache_read": 0.2,
+        "cache_write": 2.5,
+        "tiers": [
+          {
+            "input": 4,
+            "output": 15,
+            "cache_read": 0.4,
+            "cache_write": 5,
+            "tier": {
+              "type": "context",
+              "size": 272000
+            }
+          }
+        ],
+        "context_over_200k": {
+          "input": 4,
+          "output": 15,
+          "cache_read": 0.4,
+          "cache_write": 5
+        }
+      },
+      "limit": {
+        "context": 1050000,
+        "input": 922000,
+        "output": 128000
+      },
+      "knowledge": "2026-04-20"
+    }
+  },
+  {
+    "id": "gpt-6.1-sol",
+    "name": "GPT-6.1 Sol",
+    "provider": "openai",
+    "family": "gpt-sol",
+    "created_at": "2026-09-29 00:00:00 UTC",
+    "context_window": 1050000,
+    "max_output_tokens": 128000,
+    "knowledge_cutoff": "2026-04-30",
+    "modalities": {
+      "input": [
+        "text",
+        "image",
+        "pdf"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "structured_output",
+      "reasoning",
+      "vision"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 2,
+          "output_per_million": 10,
+          "cache_read_input_per_million": 0.1,
+          "cache_write_input_per_million": 2.5
+        }
+      }
+    },
+    "metadata": {
+      "object": "model",
+      "owned_by": "system",
+      "source": "models.dev",
+      "provider_id": "openai",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-09-29",
+      "reasoning_options": [
+        {
+          "type": "effort",
+          "values": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 2,
+        "output": 10,
+        "cache_read": 0.1,
+        "cache_write": 2.5,
+        "tiers": [
+          {
+            "input": 4,
+            "output": 15,
+            "cache_read": 0.2,
+            "cache_write": 5,
+            "tier": {
+              "type": "context",
+              "size": 272000
+            }
+          }
+        ],
+        "context_over_200k": {
+          "input": 4,
+          "output": 15,
+          "cache_read": 0.2,
+          "cache_write": 5
+        }
+      },
+      "limit": {
+        "context": 1050000,
+        "input": 922000,
         "output": 128000
       },
       "knowledge": "2026-04-30"
@@ -28672,6 +29573,165 @@
     "metadata": {
       "object": "model",
       "owned_by": "system"
+    }
+  },
+  {
+    "id": "gpt-daybreak-blue-latest",
+    "name": "Daybreak Blue",
+    "provider": "openai",
+    "family": "gpt-sol",
+    "created_at": "2026-08-07 00:00:00 UTC",
+    "context_window": 1050000,
+    "max_output_tokens": 128000,
+    "knowledge_cutoff": "2026-02-16",
+    "modalities": {
+      "input": [
+        "text",
+        "image",
+        "pdf"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "structured_output",
+      "reasoning",
+      "vision"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 4,
+          "output_per_million": 20,
+          "cache_read_input_per_million": 0.4,
+          "cache_write_input_per_million": 5
+        }
+      }
+    },
+    "metadata": {
+      "object": "model",
+      "owned_by": "system",
+      "source": "models.dev",
+      "provider_id": "openai",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-08-07",
+      "reasoning_options": [
+        {
+          "type": "effort",
+          "values": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 4,
+        "output": 20,
+        "cache_read": 0.4,
+        "cache_write": 5,
+        "tiers": [
+          {
+            "input": 8,
+            "output": 30,
+            "cache_read": 0.8,
+            "cache_write": 10,
+            "tier": {
+              "type": "context",
+              "size": 272000
+            }
+          }
+        ],
+        "context_over_200k": {
+          "input": 8,
+          "output": 30,
+          "cache_read": 0.8,
+          "cache_write": 10
+        }
+      },
+      "limit": {
+        "context": 1050000,
+        "input": 922000,
+        "output": 128000
+      },
+      "knowledge": "2026-02-16"
+    }
+  },
+  {
+    "id": "gpt-daybreak-red-latest",
+    "name": "Daybreak Red",
+    "provider": "openai",
+    "family": "gpt",
+    "created_at": "2026-08-07 00:00:00 UTC",
+    "context_window": 400000,
+    "max_output_tokens": 128000,
+    "knowledge_cutoff": "2026-02-16",
+    "modalities": {
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "structured_output",
+      "reasoning",
+      "vision"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 12.5,
+          "output_per_million": 75,
+          "cache_read_input_per_million": 1.25,
+          "cache_write_input_per_million": 15.625
+        }
+      }
+    },
+    "metadata": {
+      "object": "model",
+      "owned_by": "system",
+      "source": "models.dev",
+      "provider_id": "openai",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-08-07",
+      "reasoning_options": [
+        {
+          "type": "effort",
+          "values": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 12.5,
+        "output": 75,
+        "cache_read": 1.25,
+        "cache_write": 15.625
+      },
+      "limit": {
+        "context": 400000,
+        "input": 272000,
+        "output": 128000
+      },
+      "knowledge": "2026-02-16"
     }
   },
   {
@@ -28965,6 +30025,82 @@
     "metadata": {
       "object": "model",
       "owned_by": "system"
+    }
+  },
+  {
+    "id": "gpt-realtime-2.1",
+    "name": "GPT-Realtime-2.1",
+    "provider": "openai",
+    "family": "gpt",
+    "created_at": "2026-07-06 00:00:00 UTC",
+    "context_window": 128000,
+    "max_output_tokens": 32000,
+    "knowledge_cutoff": "2024-09-30",
+    "modalities": {
+      "input": [
+        "text",
+        "audio",
+        "image"
+      ],
+      "output": [
+        "text",
+        "audio"
+      ]
+    },
+    "capabilities": [
+      "function_calling",
+      "reasoning",
+      "vision"
+    ],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 4,
+          "output_per_million": 24,
+          "cache_read_input_per_million": 0.4
+        }
+      },
+      "audio_tokens": {
+        "standard": {
+          "input_per_million": 32,
+          "output_per_million": 64
+        }
+      }
+    },
+    "metadata": {
+      "object": "model",
+      "owned_by": "system",
+      "source": "models.dev",
+      "provider_id": "openai",
+      "open_weights": false,
+      "attachment": true,
+      "temperature": false,
+      "last_updated": "2026-07-06",
+      "reasoning_options": [
+        {
+          "type": "effort",
+          "values": [
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh"
+          ]
+        }
+      ],
+      "cost": {
+        "input": 4,
+        "output": 24,
+        "cache_read": 0.4,
+        "input_audio": 32,
+        "output_audio": 64
+      },
+      "limit": {
+        "context": 128000,
+        "input": 96000,
+        "output": 32000
+      },
+      "knowledge": "2024-09-30"
     }
   },
   {

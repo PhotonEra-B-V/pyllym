@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+### Added
+
+- **Anthropic models** registered from `models.dev`: Claude Sonnet 5
+  (`claude-sonnet-5`, $2/$10), Claude Opus 5 (`claude-opus-5`, $5/$25),
+  Claude Opus 5.5 (`claude-opus-5-5`, $4/$20, $0.20 cache reads) and Claude
+  Sonnet 5.5 (`claude-sonnet-5-5`, $2/$10). All have a 1,000,000-token
+  context window, 128,000 max output tokens and the five-level effort ladder.
+  Aliases map each model across `anthropic`, `openrouter`, `bedrock`,
+  `vertexai` and `azure`. `claude-opus-5.5` and `claude-sonnet-5.5` resolve
+  the dotted form to the canonical id.
+- **OpenAI models** registered from `models.dev`: the GPT-5.6 line
+  (`gpt-5.6`, `gpt-5.6-luna`, `gpt-5.6-terra`, `gpt-5.6-sol`), `gpt-6-luna`,
+  `gpt-6-sol`, `gpt-6.1-sol`, `gpt-daybreak-blue-latest`,
+  `gpt-daybreak-red-latest` and `gpt-realtime-2.1`. The 1.05M-context models
+  carry the >272K long-context pricing tier. Aliases cover `openai` and
+  `openrouter` wherever OpenRouter serves the model.
+
+### Changed
+
+- `claude-sonnet-4-5` (and its dated snapshot) now records a 1,000,000-token
+  context window, up from 200,000. `claude-sonnet-4-6` max output rises from
+  64,000 to 128,000 tokens.
+- Knowledge cutoffs filled in for `claude-opus-4-8` (2026-01) and
+  `claude-fable-5-1` (2026-06).
+- `claude-fable-5-1` and `gpt-6-astra` are now indexed by `models.dev` and
+  switch to `metadata.source = "models.dev"`. Their `created_at` values are
+  kept. `gpt-6-astra` and `gpt-6-astra-pro` move to the `gpt-astra` family.
+  Their long-context tier gains the $25/MTok cache-write rate.
+
 ### Fixed
 
 - **Rate limits are actually waited out.** A 429 used to be retried with the
