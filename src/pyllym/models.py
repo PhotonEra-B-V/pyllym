@@ -92,6 +92,9 @@ class Models:
             ]
         )
 
+    def decision_models(self) -> Models:
+        return Models([m for m in self._models if m.type == "decision"])
+
     def audio_models(self) -> Models:
         return Models(
             [m for m in self._models if m.type == "audio" or "audio" in m.modalities.output]
@@ -193,6 +196,10 @@ def chat_models() -> Models:
 
 def embedding_models() -> Models:
     return instance().embedding_models()
+
+
+def decision_models() -> Models:
+    return instance().decision_models()
 
 
 def image_models() -> Models:

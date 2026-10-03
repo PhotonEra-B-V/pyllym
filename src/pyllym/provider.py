@@ -144,6 +144,11 @@ class Provider:
     async def moderate(self, input: Any, *, model: str) -> Any:
         return await self._default_protocol()(self).moderate(input, model=model)
 
+    async def decide(
+        self, state: Any, questions: dict[str, Any], *, model: str, **options: Any
+    ) -> Any:
+        return await self._default_protocol()(self).decide(state, questions, model=model, **options)
+
     async def paint(
         self,
         prompt: str,

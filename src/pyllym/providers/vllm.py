@@ -3,17 +3,18 @@
 vLLM's OpenAI-compatible server speaks the Chat Completions dialect at a
 user-supplied endpoint (e.g. ``http://localhost:8000/v1``). Auth is optional:
 a bearer token is sent only when ``vllm_api_key`` is configured (matching the
-server's ``--api-key`` flag).
+server's ``--api-key`` flag). An NLI classifier served on ``/classify`` (e.g.
+OpenJev) also answers ``pyllym.decide()``; see :mod:`..protocols.nli_classify`.
 """
 
 from __future__ import annotations
 
-from ..protocols.chat_completions import ChatCompletions
+from ..protocols.nli_classify import NLIClassify
 from ..provider import Provider
 
 
 class VLLM(Provider):
-    protocols = {"chat_completions": ChatCompletions}
+    protocols = {"chat_completions": NLIClassify}
     default_protocol_name = "chat_completions"
 
     @property

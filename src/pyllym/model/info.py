@@ -142,6 +142,8 @@ class Info:
             return "embedding"
         if "moderation" in output:
             return "moderation"
+        if "decisions" in output:
+            return "decision"
         if "image" in output:
             return "image"
         if "audio" in output:
