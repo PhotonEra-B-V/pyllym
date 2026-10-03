@@ -102,6 +102,13 @@ class Protocol(StreamingMixin):
         response = await self.connection.post(self.moderation_url(), payload)
         return self.parse_moderation_response(response, model=model)
 
+    async def decide(
+        self, state: Any, questions: dict[str, Any], *, model: str, **options: Any
+    ) -> Any:
+        payload = self.render_decision_payload(state, questions, model=model, **options)
+        response = await self.connection.post(self.decision_url(), payload)
+        return self.parse_decision_response(response, model=model, questions=questions)
+
     async def paint(
         self,
         prompt: str,
@@ -214,6 +221,20 @@ class Protocol(StreamingMixin):
 
     def parse_moderation_response(self, response: Any, *, model: str) -> Any:
         raise NotImplementedError
+
+    # --- decisions ---
+    def render_decision_payload(
+        self, state: Any, questions: dict[str, Any], *, model: str, **options: Any
+    ) -> dict[str, Any]:
+        raise NotImplementedError("This provider does not support decisions")
+
+    def decision_url(self) -> str:
+        raise NotImplementedError("This provider does not support decisions")
+
+    def parse_decision_response(
+        self, response: Any, *, model: str, questions: dict[str, Any]
+    ) -> Any:
+        raise NotImplementedError("This provider does not support decisions")
 
     # --- images ---
     def render_image_payload(

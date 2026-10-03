@@ -8,10 +8,10 @@ Guidance for Claude Code when working in this repository.
 (OpenAI, Anthropic, Google Gemini, AWS Bedrock, DeepSeek, Mistral, Ollama,
 OpenRouter, Perplexity, VertexAI, xAI, GPUStack, Azure, Qwen, Zhipu GLM,
 Moonshot, Doubao, ERNIE, MiniMax, NVIDIA, Cerebras, Hugging Face, Databricks,
-fal.ai, and any OpenAI-compatible API).
+fal.ai, TypeSafe, and any OpenAI-compatible API).
 
 It provides chat (text, images, audio, PDFs), streaming, tools (function
-calling), structured output, embeddings, image generation, video generation,
+calling), structured output, decisions (typed calibrated answers), embeddings, image generation, video generation,
 speech, transcription, moderation, and an optional SQLAlchemy persistence
 layer.
 
@@ -67,6 +67,13 @@ llm_ignore/                 # read-only reference source, if present (git-ignore
   owning the session; `tools_from_session` adapts each remote tool into an
   `MCPTool` (a `Tool` subclass), so the adapter is testable against any object
   with `list_tools`/`call_tool` — no SDK needed in tests.
+- Decisions (`decision.py`, `pyllym.decide`) are provider-neutral:
+  `Question` (choice / score / yes_no) in, `Decision` of `Answer`s out. Each
+  protocol maps them to its wire: `protocols/systemone.py` (TypeSafe Jev,
+  yes/no spelled `noul` on the wire) and `protocols/nli_classify.py` (zero-shot
+  NLI over vLLM's root `/classify`, e.g. OpenJev). A new decision backend
+  (e.g. OpenAI's Decisions API once its schema is public) implements
+  `render_decision_payload` / `decision_url` / `parse_decision_response`.
 - Persistence is a Python-native async SQLAlchemy model factory under
   `persistence/`.
 - Celery integration (`celery` extra) is a task factory under `celery/`:

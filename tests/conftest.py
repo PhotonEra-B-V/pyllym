@@ -63,6 +63,7 @@ _KEYS = {
     "doubao_api_key": "db-test",
     "ernie_api_key": "er-test",
     "databricks_api_key": "dbx-test",
+    "typesafe_api_key": "ts-test",
     "databricks_api_base": "https://ws.cloud.databricks.com/serving-endpoints",
     "bedrock_api_key": "AKIA-test",
     "bedrock_secret_key": "secret-test",

@@ -41,6 +41,7 @@ print(message.content)
 - 🔌 **MCP client** — use tools from any MCP server as ordinary pyllym tools (`mcp` extra)
 - 📋 **Structured output** with JSON Schema / Pydantic models
 - 🧠 **Thinking / reasoning** controls (effort & budget)
+- 🎯 **Decisions** — typed, calibrated answers from decision models (Jev, OpenJev)
 - 🔢 **Embeddings**, 🎨 **image generation**, 🗣️ **speech**, 📝 **transcription**, 🛡️ **moderation**
 - 📚 **Citations** normalized across providers
 - 🗄️ **Optional SQLAlchemy persistence** (async) for chats, messages, and tool calls
@@ -214,6 +215,40 @@ speech.save("hello.mp3")
 text  = await pyllym.transcribe("meeting.wav")                  # Transcription(text=...)
 mod   = await pyllym.moderate("some text")                      # Moderation(...)
 ```
+
+### Decisions (Jev and other "System One" models)
+
+Decision models return a probability distribution per typed question rather
+than text. `pyllym.decide` takes the context (`state`) and named questions:
+
+```python
+from pyllym import Question
+
+decision = await pyllym.decide(
+    "Customer says they were charged twice for one order.",
+    {
+        "team": Question.choice(
+            {"billing": "Charges, invoices, refunds", "technical": "Product errors"},
+            instructions="Which team should investigate first?",
+        ),
+        "severity": Question.score(["No impact", "Limited impact", "Material impact"]),
+        "needs_human": Question.yes_no("Does this need a human reviewer?"),
+    },
+)                                            # default model: jev-latest
+decision["team"].choice, decision["team"].confidence   # "billing", 0.82
+decision["severity"].score, decision["severity"].level # 1.2, "Limited impact"
+decision["needs_human"].probability                    # 0.91
+```
+
+- **TypeSafe Jev** (`typesafe_api_key` / `TYPESAFE_API_KEY`) is served by the
+  `systemone` endpoint at `https://api.typesafe.ai/v1`. Set `typesafe_api_base`
+  to route through a gateway. Jev can't chat.
+- **Open NLI classifiers on vLLM** (OpenJev, `bart-large-mnli`, ...) work
+  through vLLM's `/classify` endpoint: `provider="vllm"`. Each option is scored
+  as a zero-shot hypothesis against the state. `nli_labels`,
+  `hypothesis_template` and `pair_template` adapt it to a given checkpoint.
+- **OpenAI's Decisions API** is invite-only with an unpublished schema. Other
+  providers raise `NotImplementedError` until their protocol implements decisions.
 
 ### Image & video generation via fal.ai
 
@@ -532,7 +567,8 @@ if is_enabled():
 | DeepSeek, Mistral, xAI, Perplexity, OpenRouter | ✅ (OpenAI-compatible) |
 | NVIDIA NIM, Cerebras, Hugging Face, Databricks | ✅ (OpenAI-compatible) |
 | Qwen (DashScope), Zhipu GLM, Moonshot Kimi, Doubao, ERNIE, MiniMax | ✅ (OpenAI-compatible) |
-| Ollama, GPUStack, vLLM (local) | ✅ |
+| Ollama, GPUStack, vLLM (local) | ✅ (vLLM also serves NLI decisions via `/classify`) |
+| TypeSafe (Jev decisions via `decide`) | ✅ choice / score / yes-no |
 | fal.ai (image via `paint`, video via `animate`) | ✅ FLUX.2, HunyuanImage, Qwen-Image, LTX, Wan, HunyuanVideo |
 | Azure OpenAI | ✅ (v1-compatible endpoint) |
 | AWS Bedrock (Converse) | ✅ non-streaming (SigV4 signed); streaming WIP |

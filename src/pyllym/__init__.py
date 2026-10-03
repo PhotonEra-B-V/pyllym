@@ -24,6 +24,7 @@ from .configuration import Configuration
 from .connection import aclose
 from .content import Content, RawContent
 from .context import Context
+from .decision import Answer, Decision, Question
 from .embedding import Embedding
 from .errors import (
     BadRequestError,
@@ -110,6 +111,13 @@ async def moderate(input: Any, **kwargs: Any) -> Moderation:
     from .moderation import moderate as _moderate
 
     return await _moderate(input, **kwargs)
+
+
+async def decide(state: Any, questions: Any, **kwargs: Any) -> Decision:
+    """Answer typed questions about ``state`` with a decision model (Jev, ...)."""
+    from .decision import decide as _decide
+
+    return await _decide(state, questions, **kwargs)
 
 
 async def paint(prompt: str, **kwargs: Any) -> Image:
@@ -209,6 +217,7 @@ def _register_builtin_providers() -> None:
         ("ernie", "ERNIE"),
         ("minimax", "MiniMax"),
         ("fal", "Fal"),
+        ("typesafe", "TypeSafe"),
     ]
     import importlib
 
@@ -225,6 +234,7 @@ _register_builtin_providers()
 
 __all__ = [
     "Agent",
+    "Answer",
     "BadRequestError",
     "Chat",
     "Citation",
@@ -234,6 +244,7 @@ __all__ = [
     "Content",
     "Context",
     "ContextLengthExceededError",
+    "Decision",
     "Embedding",
     "Error",
     "ForbiddenError",
@@ -256,6 +267,7 @@ __all__ = [
     "Parameter",
     "PaymentRequiredError",
     "Provider",
+    "Question",
     "RateLimitError",
     "RawContent",
     "Role",
@@ -281,6 +293,7 @@ __all__ = [
     "configure",
     "context",
     "create_chat",
+    "decide",
     "download",
     "embed",
     "list_providers",

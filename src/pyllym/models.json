@@ -60858,6 +60858,90 @@
     }
   },
   {
+    "id": "jev-1.13.0",
+    "name": "Jev 1.13.0",
+    "provider": "typesafe",
+    "family": "jev",
+    "created_at": null,
+    "context_window": null,
+    "max_output_tokens": null,
+    "knowledge_cutoff": null,
+    "modalities": {
+      "input": [
+        "text"
+      ],
+      "output": [
+        "decisions"
+      ]
+    },
+    "capabilities": [],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 0.042,
+          "output_per_million": 0.0
+        }
+      }
+    },
+    "metadata": {}
+  },
+  {
+    "id": "jev-latest",
+    "name": "Jev",
+    "provider": "typesafe",
+    "family": "jev",
+    "created_at": "2026-09-15 00:00:00 UTC",
+    "context_window": null,
+    "max_output_tokens": null,
+    "knowledge_cutoff": null,
+    "modalities": {
+      "input": [
+        "text"
+      ],
+      "output": [
+        "decisions"
+      ]
+    },
+    "capabilities": [],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 0.042,
+          "output_per_million": 0.0
+        }
+      }
+    },
+    "metadata": {}
+  },
+  {
+    "id": "jev-preview",
+    "name": "Jev Preview",
+    "provider": "typesafe",
+    "family": "jev",
+    "created_at": null,
+    "context_window": null,
+    "max_output_tokens": null,
+    "knowledge_cutoff": null,
+    "modalities": {
+      "input": [
+        "text"
+      ],
+      "output": [
+        "decisions"
+      ]
+    },
+    "capabilities": [],
+    "pricing": {
+      "text_tokens": {
+        "standard": {
+          "input_per_million": 0.042,
+          "output_per_million": 0.0
+        }
+      }
+    },
+    "metadata": {}
+  },
+  {
     "id": "claude-3-5-haiku",
     "name": "Claude Haiku 3.5",
     "provider": "vertexai",

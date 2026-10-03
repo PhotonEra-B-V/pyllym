@@ -20,6 +20,7 @@ _SYSTEM_DEFAULTS: dict[str, Any] = {
     "default_model": "gpt-5.4",
     "default_embedding_model": "text-embedding-3-small",
     "default_moderation_model": "omni-moderation-latest",
+    "default_decision_model": "jev-latest",
     "default_image_model": "gpt-image-1.5",
     "default_speech_model": "gpt-4o-mini-tts",
     "default_transcription_model": "whisper-1",
