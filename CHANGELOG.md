@@ -1,9 +1,34 @@
 # Changelog
 
-## Unreleased
+## 1.16.0 (2026-10-04)
+
+First stable release. `pip install pyllym` / `uv add pyllym` now resolve
+without opting into pre-releases. 1.16.0b4 was tagged but never reached PyPI
+because its publish workflow failed, so its changes (below) ship here too.
 
 ### Added
 
+- **Decisions (experimental): `pyllym.decide(state, questions)`.** Decision
+  ("System One") models answer typed questions with calibrated distributions
+  instead of text. Questions are `Question.choice(...)`, `Question.score(...)`
+  or `Question.yes_no(...)`; the result is a `Decision` of `Answer`s carrying
+  `choice` / `score` / `probability`, per-option `probabilities` and
+  `confidence`. The API may still change in a minor release.
+  - **TypeSafe Jev**: new `typesafe` provider (`TYPESAFE_API_KEY`) on
+    `https://api.typesafe.ai/v1/systemone`; registry entries `jev-latest`
+    (the new `default_decision_model`), `jev-1.13.0` and `jev-preview` at
+    $0.042/M input tokens with free output. The wire format comes from
+    secondary sources and is still to be verified against TypeSafe's API
+    reference.
+  - **Open NLI classifiers on vLLM** (OpenJev, `bart-large-mnli`, ...) answer
+    `decide()` through vLLM's `/classify` endpoint as zero-shot NLI;
+    `nli_labels`, `hypothesis_template` and `pair_template` adapt it per
+    checkpoint.
+  - Providers without decision support raise `NotImplementedError`.
+    OpenAI's Decisions API is not supported yet because its schema is
+    unpublished.
+  - New `"decisions"` output modality, `Info.type == "decision"` and
+    `pyllym.models.decision_models()`.
 - **Anthropic models** registered from `models.dev`: Claude Sonnet 5
   (`claude-sonnet-5`, $2/$10), Claude Opus 5 (`claude-opus-5`, $5/$25),
   Claude Opus 5.5 (`claude-opus-5-5`, $4/$20, $0.20 cache reads) and Claude
@@ -59,7 +84,7 @@
 - Each retry is logged at INFO with the delay and the error class, so
   throttling is visible instead of silent.
 
-## 1.16.0b4 (2026-09-22)
+## 1.16.0b4 (2026-09-22, not published to PyPI)
 
 ### Changed
 

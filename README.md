@@ -51,23 +51,17 @@ print(message.content)
 
 ## Installation
 
-> [!IMPORTANT]
-> pyllym is currently published as a **pre-release** (beta). Resolvers skip
-> pre-releases by default, so opt in explicitly: `uv add --prerelease=allow pyllym`
-> or `pip install --pre pyllym`. A plain `uv add pyllym` / `pip install pyllym`
-> will not find the beta until a stable release exists.
-
 ```bash
-uv add --prerelease=allow pyllym            # core
-uv add --prerelease=allow "pyllym[db]"      # + SQLAlchemy persistence
-uv add --prerelease=allow "pyllym[celery]"  # + Celery background tasks
-uv add --prerelease=allow "pyllym[mime]"    # + content-based MIME sniffing
-uv add --prerelease=allow "pyllym[mcp]"     # + MCP client (tools from MCP servers)
-uv add --prerelease=allow "pyllym[sci]"     # + numerical stack for the data-analysis examples
+uv add pyllym            # core
+uv add "pyllym[db]"      # + SQLAlchemy persistence
+uv add "pyllym[celery]"  # + Celery background tasks
+uv add "pyllym[mime]"    # + content-based MIME sniffing
+uv add "pyllym[mcp]"     # + MCP client (tools from MCP servers)
+uv add "pyllym[sci]"     # + numerical stack for the data-analysis examples
 ```
 
 Not using [uv](https://docs.astral.sh/uv/)? The same extras work with
-`pip install --pre "pyllym[...]"`.
+`pip install "pyllym[...]"`.
 
 The `sci` extra pulls in the scientific Python stack — **numpy**, **scipy**,
 **pandas**, **matplotlib**, **seaborn**, **scikit-learn**, and **sympy** — used
@@ -152,7 +146,7 @@ Tools may be sync or async. Run them concurrently with
 ### MCP tools (Model Context Protocol)
 
 Tools don't have to live in your process. With the `mcp` extra
-(`uv add --prerelease=allow "pyllym[mcp]"`; SDK 1.x and 2.x both
+(`uv add "pyllym[mcp]"`; SDK 1.x and 2.x both
 work), pyllym connects to any
 [MCP](https://modelcontextprotocol.io) server — spawned locally over stdio or
 remote over streamable HTTP — and adapts its tools into ordinary `Tool`
@@ -217,6 +211,11 @@ mod   = await pyllym.moderate("some text")                      # Moderation(...
 ```
 
 ### Decisions (Jev and other "System One" models)
+
+> [!NOTE]
+> `decide()` is **experimental**. Its API may change in a minor release while
+> the Jev wire format is checked against TypeSafe's API reference and more
+> decision backends arrive.
 
 Decision models return a probability distribution per typed question rather
 than text. `pyllym.decide` takes the context (`state`) and named questions:
