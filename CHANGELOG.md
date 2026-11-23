@@ -1,5 +1,54 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Model registry refresh from models.dev (2026-11-22): 316 new entries.**
+  Added in the existing entry shape (not via `models.refresh()`, which would
+  replace curated pricing with sparse list-endpoint data). Existing entries
+  are unchanged.
+  - OpenAI: `gpt-6.2-astra`, `gpt-6.2-sol`, `gpt-6.1-terra`.
+  - Anthropic: `claude-fable-5-2` (plus dotted `claude-fable-5.2` alias).
+  - Gemini: `gemini-4-neon`, `gemini-4-hydrogen`, `gemini-4-carbon`,
+    `gemini-4-argon`, `gemini-3.8-flash`, `gemini-3.7-flash`,
+    `gemini-3.6-flash`, `gemini-3.5-flash-lite`, and the image/live/omni
+    previews.
+  - xAI: `grok-4.5`, `grok-4.6`, `grok-4.7`, `grok-imagine-video-1.5(-lite)`.
+  - Mistral: `mistral-large-4` and the partner models it now serves.
+  - DeepSeek: `deepseek-v4-flash-vision-exp`.
+  - Zhipu: the GLM 4.5-5.3 line from the international z.ai catalog (USD
+    pricing), alongside the existing `glm-5.3` / `glm-5.3-flash`.
+  - OpenRouter, Bedrock, Vertex AI and Azure: everything released since
+    2026-06-01, including the Claude 5.x, GPT-6.x and Gemini 4 lines, Qwen
+    3.8 / Qwen4 Max, Kimi K3 / K3.1 Pro, Muse, Nemotron 3.5, Hy4, MiMo V2.6
+    and Thinking Machines Inkling / Inkling 2. Claude on Vertex AI keeps the
+    bare id (`claude-fable-5-2`, not `claude-fable-5-2@default`).
+  - Aliases for the new OpenAI, Anthropic and Gemini models.
+
+### Changed
+
+- **Existing registry entries reconciled with models.dev (2026-11-22).**
+  - `metadata.status` (`deprecated` / `beta`) recorded on 86 entries and
+    missing `knowledge_cutoff` filled on 184, across all providers.
+  - Mistral and xAI entries resynced: cache-read rates, structured output,
+    PDF/image input, context windows and reasoning options. The moving
+    pointers now describe what they serve: `mistral-large-latest` is Mistral
+    Large 4 (1M context, $0.70/$2.10), `mistral-medium-latest` is Medium 3.5
+    ($1.50/$7.50), and `ministral-3b-latest` / `ministral-8b-latest` carry
+    the current rates.
+  - `gemini-flash-latest` ($0.75/$3.75) and `gemini-flash-lite-latest`
+    ($0.30/$2.50) repriced, with effort-style reasoning options.
+  - `chatgpt-image-latest` text pricing corrected to $5/$10.
+  - OpenRouter (98 entries) and Bedrock (39) pricing synced to models.dev:
+    current rates plus cache-read/cache-write prices. The `~vendor/...-latest`
+    OpenRouter pointers now price the models they resolve to, and Bedrock
+    Claude 4.x entries carry the 10% higher Bedrock rates.
+  - Left as curated: `created_at` and `family` values, the Claude Sonnet 4.5
+    1M context, DeepSeek V4 routing/pricing, OpenAI and Gemini image-token
+    pricing, Vertex AI prices, and aggregator context/output limits.
+    Entries models.dev has dropped are kept.
+
 ## 1.16.0 (2026-10-04)
 
 First stable release. `pip install pyllym` / `uv add pyllym` now resolve
