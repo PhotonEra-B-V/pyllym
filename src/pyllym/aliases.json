@@ -38,8 +38,18 @@
     "bedrock": "anthropic.claude-fable-5-1",
     "vertexai": "claude-fable-5-1"
   },
+  "claude-fable-5-2": {
+    "anthropic": "claude-fable-5-2",
+    "openrouter": "anthropic/claude-fable-5.2",
+    "bedrock": "anthropic.claude-fable-5-2",
+    "vertexai": "claude-fable-5-2",
+    "azure": "claude-fable-5-2"
+  },
   "claude-fable-5.1": {
     "anthropic": "claude-fable-5-1"
+  },
+  "claude-fable-5.2": {
+    "anthropic": "claude-fable-5-2"
   },
   "claude-sonnet-5": {
     "anthropic": "claude-sonnet-5",
@@ -261,6 +271,11 @@
     "openrouter": "google/gemini-3.1-flash-lite",
     "vertexai": "gemini-3.1-flash-lite"
   },
+  "gemini-3.1-flash-lite-image": {
+    "gemini": "gemini-3.1-flash-lite-image",
+    "openrouter": "google/gemini-3.1-flash-lite-image",
+    "vertexai": "gemini-3.1-flash-lite-image"
+  },
   "gemini-3.1-flash-lite-preview": {
     "gemini": "gemini-3.1-flash-lite-preview",
     "openrouter": "google/gemini-3.1-flash-lite-preview",
@@ -284,6 +299,46 @@
     "gemini": "gemini-3.5-flash",
     "openrouter": "google/gemini-3.5-flash",
     "vertexai": "gemini-3.5-flash"
+  },
+  "gemini-3.5-flash-lite": {
+    "gemini": "gemini-3.5-flash-lite",
+    "openrouter": "google/gemini-3.5-flash-lite",
+    "vertexai": "gemini-3.5-flash-lite"
+  },
+  "gemini-3.6-flash": {
+    "gemini": "gemini-3.6-flash",
+    "openrouter": "google/gemini-3.6-flash",
+    "vertexai": "gemini-3.6-flash"
+  },
+  "gemini-3.7-flash": {
+    "gemini": "gemini-3.7-flash",
+    "openrouter": "google/gemini-3.7-flash",
+    "vertexai": "gemini-3.7-flash"
+  },
+  "gemini-3.8-flash": {
+    "gemini": "gemini-3.8-flash",
+    "openrouter": "google/gemini-3.8-flash",
+    "vertexai": "gemini-3.8-flash"
+  },
+  "gemini-4-argon": {
+    "gemini": "gemini-4-argon",
+    "openrouter": "google/gemini-4-argon",
+    "vertexai": "gemini-4-argon"
+  },
+  "gemini-4-carbon": {
+    "gemini": "gemini-4-carbon",
+    "openrouter": "google/gemini-4-carbon",
+    "vertexai": "gemini-4-carbon"
+  },
+  "gemini-4-hydrogen": {
+    "gemini": "gemini-4-hydrogen",
+    "openrouter": "google/gemini-4-hydrogen",
+    "vertexai": "gemini-4-hydrogen"
+  },
+  "gemini-4-neon": {
+    "gemini": "gemini-4-neon",
+    "openrouter": "google/gemini-4-neon",
+    "vertexai": "gemini-4-neon"
   },
   "gemini-embedding-001": {
     "gemini": "gemini-embedding-001",
@@ -508,6 +563,18 @@
   "gpt-6.1-sol": {
     "openai": "gpt-6.1-sol",
     "openrouter": "openai/gpt-6.1-sol"
+  },
+  "gpt-6.1-terra": {
+    "openai": "gpt-6.1-terra",
+    "openrouter": "openai/gpt-6.1-terra"
+  },
+  "gpt-6.2-astra": {
+    "openai": "gpt-6.2-astra",
+    "openrouter": "openai/gpt-6.2-astra"
+  },
+  "gpt-6.2-sol": {
+    "openai": "gpt-6.2-sol",
+    "openrouter": "openai/gpt-6.2-sol"
   },
   "gpt-audio": {
     "openai": "gpt-audio",
